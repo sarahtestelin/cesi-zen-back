@@ -3,12 +3,13 @@ spring:
     name: cesi-zen-back
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/cesizen
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:5432/cesizenDb
+    username: cesizenUser
+    password: password
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
     show-sql: true
