@@ -1,82 +1,76 @@
 -- liquibase formatted sql
 -- changeset sarah:001_init_schema
 
-CREATE TABLE AppUser (
-    appUserId CHAR(36) NOT NULL DEFAULT (UUID()),
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE app_user (
+    app_user_id UUID NOT NULL DEFAULT gen_random_uuid(),
     mail VARCHAR(150) NOT NULL,
     pseudo VARCHAR(150) NOT NULL,
-    appUserIsActive BOOLEAN NOT NULL DEFAULT TRUE,
-    hashedPassword VARCHAR(250) NOT NULL,
-    lastConnectionAt TIMESTAMP NULL,
-    PRIMARY KEY (appUserId),
-    UNIQUE KEY uq_appUser_mail (mail),
-    UNIQUE KEY uq_appUser_pseudo (pseudo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    app_user_is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    hashed_password VARCHAR(250) NOT NULL,
+    last_connection_at TIMESTAMP NULL,
+    CONSTRAINT pk_app_user PRIMARY KEY (app_user_id),
+    CONSTRAINT uq_app_user_mail UNIQUE (mail),
+    CONSTRAINT uq_app_user_pseudo UNIQUE (pseudo)
+);
 
-CREATE TABLE Resource (
-    resourceId CHAR(36) NOT NULL DEFAULT (UUID()),
-    resourceIsActive BOOLEAN NOT NULL,
-    resourceIsUsed BOOLEAN NOT NULL,
-    resourceTitle VARCHAR(150) NOT NULL,
-    resourceDescription TEXT NOT NULL,
+CREATE TABLE resource (
+    resource_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    resource_is_active BOOLEAN NOT NULL,
+    resource_is_used BOOLEAN NOT NULL,
+    resource_title VARCHAR(150) NOT NULL,
+    resource_description TEXT NOT NULL,
     status VARCHAR(150) NOT NULL,
-    resourceCreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (resourceId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    resource_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_resource PRIMARY KEY (resource_id)
+);
 
-CREATE TABLE Survey (
-    surveyId CHAR(36) NOT NULL DEFAULT (UUID()),
+CREATE TABLE survey (
+    survey_id UUID NOT NULL DEFAULT gen_random_uuid(),
     question VARCHAR(255) NOT NULL,
     score INT NOT NULL,
-    finalScore INT NOT NULL,
-    appUserId CHAR(36),
-    PRIMARY KEY (surveyId),
-    CONSTRAINT fk_survey_appUser
-        FOREIGN KEY (appUserId)
-            REFERENCES AppUser(appUserId)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    final_score INT NOT NULL,
+    app_user_id UUID NULL,
+    CONSTRAINT pk_survey PRIMARY KEY (survey_id),
+    CONSTRAINT fk_survey_app_user FOREIGN KEY (app_user_id)
+        REFERENCES app_user(app_user_id)
+        ON DELETE CASCADE
+);
 
-CREATE TABLE RefreshToken (
-    refreshTokenId CHAR(36) NOT NULL DEFAULT (UUID()),
-    appUserId CHAR(36) NOT NULL,
-    creationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expirationDate TIMESTAMP NOT NULL,
-    isRevoked BOOLEAN NOT NULL DEFAULT FALSE,
-    deviceInfo VARCHAR(255),
-    PRIMARY KEY (refreshTokenId),
-    CONSTRAINT fk_refreshToken_appUser
-        FOREIGN KEY (appUserId)
-            REFERENCES AppUser(appUserId)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE refresh_token (
+    refresh_token_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    app_user_id UUID NOT NULL,
+    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration_date TIMESTAMP NOT NULL,
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    device_info VARCHAR(255),
+    CONSTRAINT pk_refresh_token PRIMARY KEY (refresh_token_id),
+    CONSTRAINT fk_refresh_token_app_user FOREIGN KEY (app_user_id)
+        REFERENCES app_user(app_user_id)
+        ON DELETE CASCADE
+);
 
-CREATE TABLE HistoricEtat (
-    historicEtatId CHAR(36) NOT NULL DEFAULT (UUID()),
-    modificationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    oldValue TEXT NOT NULL,
-    newValue TEXT NOT NULL,
+CREATE TABLE historic_etat (
+    historic_etat_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    modification_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    old_value TEXT NOT NULL,
+    new_value TEXT NOT NULL,
     comment VARCHAR(255) NOT NULL,
-    appUserId CHAR(36),
-    PRIMARY KEY (historicEtatId),
-    CONSTRAINT fk_historicEtat_appUser
-        FOREIGN KEY (appUserId)
-            REFERENCES AppUser(appUserId)
-            ON DELETE SET NULL
-            ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    app_user_id UUID NULL,
+    CONSTRAINT pk_historic_etat PRIMARY KEY (historic_etat_id),
+    CONSTRAINT fk_historic_etat_app_user FOREIGN KEY (app_user_id)
+        REFERENCES app_user(app_user_id)
+        ON DELETE SET NULL
+);
 
-CREATE TABLE ResetPassword (
-    resetPasswordId CHAR(36) NOT NULL DEFAULT (UUID()),
-    appUserId CHAR(36) NOT NULL,
-    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tokenDemandReset VARCHAR(255) NOT NULL,
-    PRIMARY KEY (resetPasswordId),
-    CONSTRAINT fk_resetPassword_appUser
-        FOREIGN KEY (appUserId)
-            REFERENCES AppUser(appUserId)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE reset_password (
+    reset_password_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    app_user_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    token_demand_reset VARCHAR(255) NOT NULL,
+    CONSTRAINT pk_reset_password PRIMARY KEY (reset_password_id),
+    CONSTRAINT fk_reset_password_app_user FOREIGN KEY (app_user_id)
+        REFERENCES app_user(app_user_id)
+        ON DELETE CASCADE
+);
