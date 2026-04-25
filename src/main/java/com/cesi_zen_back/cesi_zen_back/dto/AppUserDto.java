@@ -8,5 +8,6 @@ public record AppUserDto(
         String mail,
         String pseudo,
         boolean appUserIsActive,
-        LocalDateTime lastConnectionAt
+        LocalDateTime lastConnectionAt,
+        String role
 ) {}

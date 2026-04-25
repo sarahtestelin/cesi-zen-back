@@ -1,73 +1,50 @@
 package com.cesi_zen_back.cesi_zen_back.controller;
 
 import com.cesi_zen_back.cesi_zen_back.dto.AppUserDto;
-import com.cesi_zen_back.cesi_zen_back.entity.AppUser;
-import com.cesi_zen_back.cesi_zen_back.repository.AppUserRepository;
-import org.springframework.http.HttpStatus;
+import com.cesi_zen_back.cesi_zen_back.service.AppUserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class AppUserController {
 
-    private final AppUserRepository repo;
-
-    public AppUserController(AppUserRepository repo) {
-        this.repo = repo;
-    }
-
-    private AppUserDto toDto(AppUser u) {
-        return new AppUserDto(
-                u.getId(),
-                u.getMail(),
-                u.getPseudo(),
-                u.isAppUserIsActive(),
-                u.getLastConnectionAt()
-        );
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public AppUserDto create(@RequestBody AppUser u) {
-        u.setId(null);
-        return toDto(repo.save(u));
-    }
+    private final AppUserService appUserService;
 
     @GetMapping
-    public List<AppUserDto> list() {
-        return repo.findAll().stream()
-                .map(this::toDto)
-                .toList();
+    public List<AppUserDto> getAllUsers() {
+        return appUserService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public AppUserDto get(@PathVariable UUID id) {
-        return repo.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    public AppUserDto getUserById(@PathVariable UUID id) {
+        return appUserService.getUserById(id);
     }
 
     @PutMapping("/{id}")
-    public AppUserDto update(@PathVariable UUID id, @RequestBody AppUser body) {
-        AppUser existing = repo.findById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-        body.setId(existing.getId());
-        return toDto(repo.save(body));
+    public AppUserDto updateUser(
+            @PathVariable UUID id,
+            @RequestBody AppUserDto appUserDto
+    ) {
+        return appUserService.updateUser(id, appUserDto);
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
-        if (!repo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        repo.deleteById(id);
+    public void deleteUser(@PathVariable UUID id) {
+        appUserService.deleteUser(id);
+    }
+
+    @PatchMapping("/{id}/disable")
+    public AppUserDto disableUser(@PathVariable UUID id) {
+        return appUserService.disableUser(id);
+    }
+
+    @PatchMapping("/{id}/enable")
+    public AppUserDto enableUser(@PathVariable UUID id) {
+        return appUserService.enableUser(id);
     }
 }
