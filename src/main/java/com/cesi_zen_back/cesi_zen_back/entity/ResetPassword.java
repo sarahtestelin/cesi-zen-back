@@ -6,7 +6,7 @@ import java.util.UUID;
 import lombok.*;
 
 @Entity
-@Table(name = "reset_passwords")
+@Table(name = "reset_password")
 @Getter
 @Setter
 @Builder
@@ -16,21 +16,22 @@ public class ResetPassword {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "reset_password_id")
     private UUID idResetPassword;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "expiration_date", nullable = false)
     private LocalDateTime expirationDate;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(name = "token_demand_reset", nullable = false, unique = true, length = 255)
     private String tokenDemandReset;
 
-    @Column(nullable = false)
+    @Column(name = "used", nullable = false)
     private boolean used;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "app_user_id", nullable = false)
     private AppUser user;
 }
