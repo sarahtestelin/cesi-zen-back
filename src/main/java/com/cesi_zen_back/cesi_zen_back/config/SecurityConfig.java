@@ -53,43 +53,40 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
 
-                        // Auth publique
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
 
-                        // Mot de passe public
                         .requestMatchers(HttpMethod.POST, "/api/password/reset-request").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/password/reset").permitAll()
 
-                        // Ressources publiques
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/*").permitAll()
 
-                        // Ressources admin
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/*/history").hasRole("ADMIN")
-
                         .requestMatchers(HttpMethod.POST, "/api/v1/ressources").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/ressources/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/ressources/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/ressources/**").hasRole("ADMIN")
 
-                        // Diagnostic anonyme : endpoint à créer ensuite
-                        .requestMatchers(HttpMethod.POST, "/api/v1/surveys/anonymous").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/diagnostics/questions").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/diagnostics/anonymous").permitAll()
 
-                        // Anciennes routes admin si besoin
+                        .requestMatchers(HttpMethod.POST, "/api/v1/diagnostics/submit").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/diagnostics/results/me").authenticated()
+
+                        .requestMatchers("/api/v1/diagnostics/admin/**").hasRole("ADMIN")
+
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Tout le reste nécessite une connexion
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->
