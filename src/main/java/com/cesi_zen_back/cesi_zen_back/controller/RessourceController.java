@@ -23,31 +23,33 @@ public class RessourceController {
     private final HistoricEtatRepository historicRepo;
     private final ObjectMapper objectMapper;
 
-    public RessourceController(RessourceRepository repo,
-                               HistoricEtatRepository historicRepo,
-                               ObjectMapper objectMapper) {
+    public RessourceController(
+            RessourceRepository repo,
+            HistoricEtatRepository historicRepo,
+            ObjectMapper objectMapper
+    ) {
         this.repo = repo;
         this.historicRepo = historicRepo;
         this.objectMapper = objectMapper;
     }
 
     @GetMapping
-    public List<Ressource> listPublished(
+    public List<Ressource> listPublic(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category
     ) {
-        return repo.findAll(buildSpec(search, category, "PUBLISHED"));
+        return repo.findAll(buildSpec(search, category, true));
     }
 
     @GetMapping("/{id}")
-    public Ressource getPublished(@PathVariable UUID id) {
-        Ressource r = getEntity(id);
+    public Ressource getPublic(@PathVariable UUID id) {
+        Ressource ressource = getEntity(id);
 
-        if (!"PUBLISHED".equalsIgnoreCase(r.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (!ressource.isRessourceIsActive()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ressource introuvable");
         }
 
-        return r;
+        return ressource;
     }
 
     @GetMapping("/admin")
@@ -55,21 +57,27 @@ public class RessourceController {
     public List<Ressource> listAdmin(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) Boolean active
     ) {
-        return repo.findAll(buildSpec(search, category, status));
+        return repo.findAll(buildSpec(search, category, active));
+    }
+
+    @GetMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Ressource getAdmin(@PathVariable UUID id) {
+        return getEntity(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    public Ressource create(@RequestBody Ressource r) {
+    public Ressource create(@RequestBody Ressource ressource) {
+        ressource.setId(null);
+        ressource.setRessourceIsActive(true);
+        ressource.setRessourceIsUsed(true);
+        ressource.setCreatedAt(LocalDateTime.now());
 
-        r.setId(null);
-        r.setCreatedAt(LocalDateTime.now());
-
-        Ressource saved = repo.save(r);
-
+        Ressource saved = repo.save(ressource);
         saveHistory(null, saved, "CREATION");
 
         return saved;
@@ -78,78 +86,85 @@ public class RessourceController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public Ressource update(@PathVariable UUID id, @RequestBody Ressource body) {
-
         Ressource existing = getEntity(id);
         String oldValue = toJson(existing);
 
-        body.setId(existing.getId());
+        existing.setTitle(body.getTitle());
+        existing.setDescription(body.getDescription());
+        existing.setCategory(body.getCategory());
+        existing.setRessourceIsActive(body.isRessourceIsActive());
+        existing.setRessourceIsUsed(body.isRessourceIsUsed());
 
-        Ressource saved = repo.save(body);
-
+        Ressource saved = repo.save(existing);
         saveHistory(oldValue, saved, "UPDATE");
 
         return saved;
     }
 
-    @PatchMapping("/{id}/publish")
+    @PatchMapping("/{id}/enable")
     @PreAuthorize("hasRole('ADMIN')")
-    public Ressource publish(@PathVariable UUID id) {
-        return updateStatus(id, "PUBLISHED");
-    }
+    public Ressource enable(@PathVariable UUID id) {
+        Ressource existing = getEntity(id);
+        String oldValue = toJson(existing);
 
-    @PatchMapping("/{id}/draft")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Ressource draft(@PathVariable UUID id) {
-        return updateStatus(id, "DRAFT");
+        existing.setRessourceIsActive(true);
+        existing.setRessourceIsUsed(true);
+
+        Ressource saved = repo.save(existing);
+        saveHistory(oldValue, saved, "ENABLE");
+
+        return saved;
     }
 
     @PatchMapping("/{id}/disable")
     @PreAuthorize("hasRole('ADMIN')")
     public Ressource disable(@PathVariable UUID id) {
-        return updateStatus(id, "DISABLED");
+        Ressource existing = getEntity(id);
+        String oldValue = toJson(existing);
+
+        existing.setRessourceIsActive(false);
+        existing.setRessourceIsUsed(false);
+
+        Ressource saved = repo.save(existing);
+        saveHistory(oldValue, saved, "DISABLE");
+
+        return saved;
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable UUID id) {
-        updateStatus(id, "DISABLED");
+        Ressource existing = getEntity(id);
+        String oldValue = toJson(existing);
+
+        existing.setRessourceIsActive(false);
+        existing.setRessourceIsUsed(false);
+
+        Ressource saved = repo.save(existing);
+        saveHistory(oldValue, saved, "DELETE_LOGIQUE");
     }
 
     @GetMapping("/{id}/history")
     @PreAuthorize("hasRole('ADMIN')")
     public List<HistoricEtat> history(@PathVariable UUID id) {
         return historicRepo.findAll().stream()
+                .filter(h -> "RESSOURCE".equals(h.getEntityType()))
                 .filter(h -> id.equals(h.getEntityId()))
                 .toList();
     }
 
-    private Ressource updateStatus(UUID id, String status) {
-
-        Ressource existing = getEntity(id);
-        String oldValue = toJson(existing);
-
-        existing.setStatus(status);
-
-        Ressource saved = repo.save(existing);
-
-        saveHistory(oldValue, saved, "STATUS_" + status);
-
-        return saved;
-    }
-
     private Ressource getEntity(UUID id) {
         return repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ressource introuvable"));
     }
 
-    private Specification<Ressource> buildSpec(String search, String category, String status) {
-
+    private Specification<Ressource> buildSpec(String search, String category, Boolean active) {
         return (root, query, cb) -> {
-
             List<Predicate> predicates = new ArrayList<>();
 
-            if (status != null) {
-                predicates.add(cb.equal(root.get("status"), status));
+            if (active != null) {
+                predicates.add(cb.equal(root.get("ressourceIsActive"), active));
             }
 
             if (category != null && !category.isBlank()) {
@@ -157,7 +172,6 @@ public class RessourceController {
             }
 
             if (search != null && !search.isBlank()) {
-
                 String pattern = "%" + search.toLowerCase() + "%";
 
                 predicates.add(cb.or(
@@ -166,32 +180,32 @@ public class RessourceController {
                 ));
             }
 
+            query.orderBy(cb.desc(root.get("createdAt")));
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
     private void saveHistory(String oldValue, Ressource newValue, String comment) {
-
         try {
-            HistoricEtat h = new HistoricEtat();
+            HistoricEtat historicEtat = new HistoricEtat();
 
-            h.setOldValue(oldValue == null ? "{}" : oldValue);
-            h.setNewValue(objectMapper.writeValueAsString(newValue));
-            h.setComment(comment);
-            h.setEntityType("RESSOURCE");
-            h.setEntityId(newValue.getId());
-            h.setModificationDate(LocalDateTime.now());
+            historicEtat.setOldValue(oldValue == null ? "{}" : oldValue);
+            historicEtat.setNewValue(objectMapper.writeValueAsString(newValue));
+            historicEtat.setComment(comment);
+            historicEtat.setEntityType("RESSOURCE");
+            historicEtat.setEntityId(newValue.getId());
+            historicEtat.setModificationDate(LocalDateTime.now());
 
-            historicRepo.save(h);
-
+            historicRepo.save(historicEtat);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur historique", e);
+            throw new RuntimeException("Erreur lors de la sauvegarde de l'historique", e);
         }
     }
 
-    private String toJson(Object o) {
+    private String toJson(Object value) {
         try {
-            return objectMapper.writeValueAsString(o);
+            return objectMapper.writeValueAsString(value);
         } catch (Exception e) {
             return "{}";
         }

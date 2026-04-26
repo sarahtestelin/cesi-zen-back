@@ -69,21 +69,24 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/password/reset-request").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/password/reset").permitAll()
 
-                        // Ressources publiques : visiteurs anonymes + utilisateurs connectés
+                        // Ressources publiques
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/*").permitAll()
 
-                        // Admin ressources
-                        .requestMatchers("/api/v1/ressources/admin/**").hasRole("ADMIN")
+                        // Ressources admin
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/*/history").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.POST, "/api/v1/ressources").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/ressources/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/ressources/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/ressources/**").hasRole("ADMIN")
 
-                        // Diagnostic anonyme : endpoint à créer plus tard
+                        // Diagnostic anonyme : endpoint à créer ensuite
                         .requestMatchers(HttpMethod.POST, "/api/v1/surveys/anonymous").permitAll()
 
-                        // Anciennes routes admin globales si tu en as
+                        // Anciennes routes admin si besoin
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Tout le reste nécessite une connexion

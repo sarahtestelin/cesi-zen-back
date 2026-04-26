@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/005_update_reset_password_table.sql
   - include:
       file: db/changelog/006_update_ressource_and_history.sql
+  - include:
+      file: db/changelog/007_remove_status_requirement_from_ressource.sql
