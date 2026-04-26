@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/004_add_token_to_refresh_token.sql
   - include:
       file: db/changelog/005_update_reset_password_table.sql
+  - include:
+      file: db/changelog/006_update_ressource_and_history.sql
