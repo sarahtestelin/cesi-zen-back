@@ -9,6 +9,7 @@ import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticQuestion;
 import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticResult;
 import com.cesi_zen_back.cesi_zen_back.repository.AppUserRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticQuestionRepository;
+import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticResultRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,7 +17,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticResultRepository;
 
 import java.util.List;
 import java.util.UUID;

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "survey_result")
+@Table(name = "diagnostic_result")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,7 +16,7 @@ public class DiagnosticResult {
 
     @Id
     @GeneratedValue
-    @Column(name = "survey_result_id", nullable = false)
+    @Column(name = "diagnostic_result_id", nullable = false)
     private UUID id;
 
     @Column(name = "final_score", nullable = false)
