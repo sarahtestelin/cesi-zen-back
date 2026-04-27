@@ -3,6 +3,8 @@ package com.cesi_zen_back.cesi_zen_back.controller;
 import com.cesi_zen_back.cesi_zen_back.dto.AppUserDto;
 import com.cesi_zen_back.cesi_zen_back.service.AppUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +16,11 @@ import java.util.UUID;
 public class AppUserController {
 
     private final AppUserService appUserService;
+
+    @GetMapping("/me")
+    public AppUserDto getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        return appUserService.getCurrentUser(jwt.getSubject());
+    }
 
     @GetMapping
     public List<AppUserDto> getAllUsers() {
