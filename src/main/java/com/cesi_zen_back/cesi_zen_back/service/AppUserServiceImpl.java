@@ -18,6 +18,14 @@ public class AppUserServiceImpl implements AppUserService {
     private final AppUserRepository appUserRepository;
 
     @Override
+    public AppUserDto getCurrentUser(String mail) {
+        AppUser user = appUserRepository.findByMail(mail)
+                .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
+
+        return UserMapper.toDto(user);
+    }
+
+    @Override
     public List<AppUserDto> getAllUsers() {
         return appUserRepository.findAll()
                 .stream()

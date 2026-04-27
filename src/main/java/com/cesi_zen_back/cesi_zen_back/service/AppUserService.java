@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public interface AppUserService {
 
+    AppUserDto getCurrentUser(String mail);
+
     List<AppUserDto> getAllUsers();
 
     AppUserDto getUserById(UUID id);
