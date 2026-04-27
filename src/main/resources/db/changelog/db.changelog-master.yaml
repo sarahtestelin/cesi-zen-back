@@ -15,3 +15,5 @@ databaseChangeLog:
       file: db/changelog/007_remove_status_requirement_from_ressource.sql
   - include:
       file: db/changelog/008_create_diagnostic_tables.sql
+  - include:
+      file: db/changelog/009_create_diagnostic_result_config.sql

@@ -3,12 +3,16 @@ package com.cesi_zen_back.cesi_zen_back.controller;
 import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticQuestionRequestDto;
 import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticRequestDto;
 import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticResponseDto;
+import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticResultConfigRequestDto;
+import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticResultConfigResponseDto;
 import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticResultResponseDto;
 import com.cesi_zen_back.cesi_zen_back.entity.AppUser;
 import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticQuestion;
 import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticResult;
+import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticResultConfig;
 import com.cesi_zen_back.cesi_zen_back.repository.AppUserRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticQuestionRepository;
+import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticResultConfigRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticResultRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -27,15 +31,18 @@ public class DiagnosticController {
 
     private final DiagnosticQuestionRepository questionRepository;
     private final DiagnosticResultRepository resultRepository;
+    private final DiagnosticResultConfigRepository resultConfigRepository;
     private final AppUserRepository appUserRepository;
 
     public DiagnosticController(
             DiagnosticQuestionRepository questionRepository,
             DiagnosticResultRepository resultRepository,
+            DiagnosticResultConfigRepository resultConfigRepository,
             AppUserRepository appUserRepository
     ) {
         this.questionRepository = questionRepository;
         this.resultRepository = resultRepository;
+        this.resultConfigRepository = resultConfigRepository;
         this.appUserRepository = appUserRepository;
     }
 
@@ -125,6 +132,69 @@ public class DiagnosticController {
         questionRepository.save(question);
     }
 
+    @GetMapping("/admin/result-configs")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<DiagnosticResultConfigResponseDto> listResultConfigs() {
+        return resultConfigRepository.findAllByOrderByMinScoreAsc()
+                .stream()
+                .map(this::toResultConfigDto)
+                .toList();
+    }
+
+    @PostMapping("/admin/result-configs")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
+    public DiagnosticResultConfigResponseDto createResultConfig(
+            @Valid @RequestBody DiagnosticResultConfigRequestDto request
+    ) {
+        validateResultConfig(request);
+
+        DiagnosticResultConfig config = new DiagnosticResultConfig();
+        applyResultConfigRequest(config, request);
+        config.setActive(true);
+
+        return toResultConfigDto(resultConfigRepository.save(config));
+    }
+
+    @PutMapping("/admin/result-configs/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public DiagnosticResultConfigResponseDto updateResultConfig(
+            @PathVariable UUID id,
+            @Valid @RequestBody DiagnosticResultConfigRequestDto request
+    ) {
+        validateResultConfig(request);
+
+        DiagnosticResultConfig config = getResultConfig(id);
+        applyResultConfigRequest(config, request);
+
+        return toResultConfigDto(resultConfigRepository.save(config));
+    }
+
+    @PatchMapping("/admin/result-configs/{id}/enable")
+    @PreAuthorize("hasRole('ADMIN')")
+    public DiagnosticResultConfigResponseDto enableResultConfig(@PathVariable UUID id) {
+        DiagnosticResultConfig config = getResultConfig(id);
+        config.setActive(true);
+        return toResultConfigDto(resultConfigRepository.save(config));
+    }
+
+    @PatchMapping("/admin/result-configs/{id}/disable")
+    @PreAuthorize("hasRole('ADMIN')")
+    public DiagnosticResultConfigResponseDto disableResultConfig(@PathVariable UUID id) {
+        DiagnosticResultConfig config = getResultConfig(id);
+        config.setActive(false);
+        return toResultConfigDto(resultConfigRepository.save(config));
+    }
+
+    @DeleteMapping("/admin/result-configs/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteResultConfig(@PathVariable UUID id) {
+        DiagnosticResultConfig config = getResultConfig(id);
+        config.setActive(false);
+        resultConfigRepository.save(config);
+    }
+
     private DiagnosticResponseDto calculateDiagnostic(
             DiagnosticRequestDto request,
             AppUser user,
@@ -141,28 +211,65 @@ public class DiagnosticController {
                 .mapToInt(DiagnosticQuestion::getScore)
                 .sum();
 
-        String level = resolveLevel(finalScore);
-        String message = resolveMessage(finalScore);
+        DiagnosticResultConfig config = resolveResultConfig(finalScore);
 
         UUID resultId = null;
 
         if (saveResult) {
             DiagnosticResult result = new DiagnosticResult();
             result.setFinalScore(finalScore);
-            result.setLevel(level);
-            result.setMessage(message);
+            result.setLevel(config.getLevel());
+            result.setMessage(config.getMessage());
             result.setAppUser(user);
 
             DiagnosticResult saved = resultRepository.save(result);
             resultId = saved.getId();
         }
 
-        return new DiagnosticResponseDto(resultId, finalScore, level, message);
+        return new DiagnosticResponseDto(
+                resultId,
+                finalScore,
+                config.getLevel(),
+                config.getMessage()
+        );
     }
 
     private DiagnosticQuestion getQuestion(UUID id) {
         return questionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question introuvable"));
+    }
+
+    private DiagnosticResultConfig getResultConfig(UUID id) {
+        return resultConfigRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Configuration de résultat introuvable"));
+    }
+
+    private DiagnosticResultConfig resolveResultConfig(int finalScore) {
+        return resultConfigRepository
+                .findFirstByActiveTrueAndMinScoreLessThanEqualAndMaxScoreGreaterThanEqual(finalScore, finalScore)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Aucune configuration de résultat ne correspond au score"
+                ));
+    }
+
+    private void validateResultConfig(DiagnosticResultConfigRequestDto request) {
+        if (request.maxScore() < request.minScore()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le score maximum doit être supérieur ou égal au score minimum"
+            );
+        }
+    }
+
+    private void applyResultConfigRequest(
+            DiagnosticResultConfig config,
+            DiagnosticResultConfigRequestDto request
+    ) {
+        config.setMinScore(request.minScore());
+        config.setMaxScore(request.maxScore());
+        config.setLevel(request.level());
+        config.setMessage(request.message());
     }
 
     private AppUser getCurrentUser(Jwt jwt) {
@@ -174,30 +281,6 @@ public class DiagnosticController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur introuvable"));
     }
 
-    private String resolveLevel(int finalScore) {
-        if (finalScore < 150) {
-            return "FAIBLE";
-        }
-
-        if (finalScore < 300) {
-            return "MODERE";
-        }
-
-        return "ELEVE";
-    }
-
-    private String resolveMessage(int finalScore) {
-        if (finalScore < 150) {
-            return "Votre niveau de stress semble faible. Continuez à préserver votre équilibre au quotidien.";
-        }
-
-        if (finalScore < 300) {
-            return "Votre niveau de stress semble modéré. Il peut être utile d'identifier les sources de tension et de mettre en place des actions de prévention.";
-        }
-
-        return "Votre niveau de stress semble élevé. Ce résultat n'est pas un diagnostic médical, mais il peut être utile d'en parler à un professionnel de santé.";
-    }
-
     private DiagnosticResultResponseDto toResultDto(DiagnosticResult result) {
         return new DiagnosticResultResponseDto(
                 result.getId(),
@@ -205,6 +288,19 @@ public class DiagnosticController {
                 result.getLevel(),
                 result.getMessage(),
                 result.getCreatedAt()
+        );
+    }
+
+    private DiagnosticResultConfigResponseDto toResultConfigDto(DiagnosticResultConfig config) {
+        return new DiagnosticResultConfigResponseDto(
+                config.getId(),
+                config.getMinScore(),
+                config.getMaxScore(),
+                config.getLevel(),
+                config.getMessage(),
+                config.isActive(),
+                config.getCreatedAt(),
+                config.getUpdatedAt()
         );
     }
 }
