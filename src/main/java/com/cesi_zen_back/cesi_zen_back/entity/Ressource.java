@@ -31,6 +31,9 @@ public class Ressource {
     @Column(name = "ressource_description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "status", nullable = false, length = 150)
+    private String status;
+
     @Column(name = "category", nullable = false, length = 100)
     private String category;
 
@@ -48,6 +51,10 @@ public class Ressource {
     public void prePersist() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+
+        if (status == null || status.isBlank()) {
+            status = "PUBLISHED";
         }
 
         updatedAt = LocalDateTime.now();

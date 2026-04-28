@@ -17,8 +17,24 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
 security:
   jwt:
     secret: long-random-secret-for-cesizen-project
     issuer: cesi-zen-back
     access-token-validity-minutes: 15
+
+app:
+  frontend:
+    reset-password-url: http://localhost:4200/reset-password

@@ -5,11 +5,14 @@ import java.util.UUID;
 
 public record RessourceResponseDto(
         UUID id,
+        boolean ressourceIsActive,
+        boolean ressourceIsUsed,
         String title,
         String description,
+        String status,
         String category,
-        boolean ressourceIsActive,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         Integer version
-) {}
+) {
+}
