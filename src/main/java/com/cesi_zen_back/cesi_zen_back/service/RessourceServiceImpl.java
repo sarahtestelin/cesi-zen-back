@@ -4,6 +4,7 @@ import com.cesi_zen_back.cesi_zen_back.dto.HistoricEtatResponseDto;
 import com.cesi_zen_back.cesi_zen_back.dto.RessourceResponseDto;
 import com.cesi_zen_back.cesi_zen_back.entity.HistoricEtat;
 import com.cesi_zen_back.cesi_zen_back.entity.Ressource;
+import com.cesi_zen_back.cesi_zen_back.mapper.HistoricEtatMapper;
 import com.cesi_zen_back.cesi_zen_back.mapper.RessourceMapper;
 import com.cesi_zen_back.cesi_zen_back.repository.HistoricEtatRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.RessourceRepository;
@@ -80,6 +81,7 @@ public class RessourceServiceImpl implements RessourceService {
 
         existing.setTitle(body.getTitle());
         existing.setDescription(body.getDescription());
+        existing.setStatus(body.getStatus());
         existing.setCategory(body.getCategory());
         existing.setRessourceIsActive(body.isRessourceIsActive());
         existing.setRessourceIsUsed(body.isRessourceIsUsed());
@@ -135,7 +137,7 @@ public class RessourceServiceImpl implements RessourceService {
         return historicRepo.findAll().stream()
                 .filter(h -> "RESSOURCE".equals(h.getEntityType()))
                 .filter(h -> id.equals(h.getEntityId()))
-                .map(RessourceMapper::toHistoryDto)
+                .map(HistoricEtatMapper::toDto)
                 .toList();
     }
 
