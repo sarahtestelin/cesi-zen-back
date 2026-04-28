@@ -8,12 +8,14 @@ import com.cesi_zen_back.cesi_zen_back.entity.ResetPassword;
 import com.cesi_zen_back.cesi_zen_back.exception.BadRequestException;
 import com.cesi_zen_back.cesi_zen_back.repository.AppUserRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.ResetPasswordRepository;
-import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,10 @@ public class PasswordServiceImpl implements PasswordService {
     private final AppUserRepository appUserRepository;
     private final ResetPasswordRepository resetPasswordRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+
+    @Value("${app.frontend.reset-password-url}")
+    private String resetPasswordUrl;
 
     @Override
     @Transactional
@@ -39,9 +45,13 @@ public class PasswordServiceImpl implements PasswordService {
 
             resetPasswordRepository.save(resetPassword);
 
-            // TODO brancher un vrai service mail.
-            // Pour le prototype, récupérer le token en base.
-            System.out.println("Reset password token for " + user.getMail() + " : " + resetPassword.getTokenDemandReset());
+            String resetLink = resetPasswordUrl + "?token=" + resetPassword.getTokenDemandReset();
+
+            emailService.sendResetPasswordEmail(
+                    user.getMail(),
+                    user.getPseudo(),
+                    resetLink
+            );
         });
     }
 
