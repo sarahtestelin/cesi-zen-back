@@ -1,55 +1,88 @@
 package com.cesi_zen_back.cesi_zen_back.controller;
 
+import com.cesi_zen_back.cesi_zen_back.dto.HistoricEtatResponseDto;
+import com.cesi_zen_back.cesi_zen_back.dto.RessourceResponseDto;
 import com.cesi_zen_back.cesi_zen_back.entity.Ressource;
-import com.cesi_zen_back.cesi_zen_back.repository.RessourceRepository;
+import com.cesi_zen_back.cesi_zen_back.service.RessourceService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/ressources")
+@RequiredArgsConstructor
 public class RessourceController {
 
-    private final RessourceRepository repo;
+    private final RessourceService ressourceService;
 
-    public RessourceController(RessourceRepository repo) {
-        this.repo = repo;
+    @GetMapping
+    public List<RessourceResponseDto> listPublic(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category
+    ) {
+        return ressourceService.listPublic(search, category);
+    }
+
+    @GetMapping("/{id}")
+    public RessourceResponseDto getPublic(@PathVariable UUID id) {
+        return ressourceService.getPublic(id);
+    }
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<RessourceResponseDto> listAdmin(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean active
+    ) {
+        return ressourceService.listAdmin(search, category, active);
+    }
+
+    @GetMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public RessourceResponseDto getAdmin(@PathVariable UUID id) {
+        return ressourceService.getAdmin(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Ressource create(@RequestBody Ressource r) {
-        r.setId(null);
-        return repo.save(r);
-    }
-
-    @GetMapping
-    public List<Ressource> list() {
-        return repo.findAll();
-    }
-
-    @GetMapping("/{id}")
-    public Ressource get(@PathVariable UUID id) {
-        return repo.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Ressource not found"));
+    @PreAuthorize("hasRole('ADMIN')")
+    public RessourceResponseDto create(@RequestBody Ressource ressource) {
+        return ressourceService.create(ressource);
     }
 
     @PutMapping("/{id}")
-    public Ressource update(@PathVariable UUID id, @RequestBody Ressource body) {
-        Ressource existing = get(id);
-        body.setId(existing.getId());
-        return repo.save(body);
+    @PreAuthorize("hasRole('ADMIN')")
+    public RessourceResponseDto update(@PathVariable UUID id, @RequestBody Ressource body) {
+        return ressourceService.update(id, body);
+    }
+
+    @PatchMapping("/{id}/enable")
+    @PreAuthorize("hasRole('ADMIN')")
+    public RessourceResponseDto enable(@PathVariable UUID id) {
+        return ressourceService.enable(id);
+    }
+
+    @PatchMapping("/{id}/disable")
+    @PreAuthorize("hasRole('ADMIN')")
+    public RessourceResponseDto disable(@PathVariable UUID id) {
+        return ressourceService.disable(id);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable UUID id) {
-        if (!repo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ressource not found");
-        }
-        repo.deleteById(id);
+        ressourceService.delete(id);
+    }
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<HistoricEtatResponseDto> history(@PathVariable UUID id) {
+        return ressourceService.history(id);
     }
 }

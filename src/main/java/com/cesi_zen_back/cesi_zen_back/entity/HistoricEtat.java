@@ -31,7 +31,20 @@ public class HistoricEtat {
     @Column(name = "comment", nullable = false, length = 255)
     private String comment;
 
+    @Column(name = "entity_type", length = 100)
+    private String entityType;
+
+    @Column(name = "entity_id")
+    private UUID entityId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "app_user_id") // nullable (ON DELETE SET NULL)
+    @JoinColumn(name = "app_user_id")
     private AppUser appUser;
+
+    @PrePersist
+    public void prePersist() {
+        if (modificationDate == null) {
+            modificationDate = LocalDateTime.now();
+        }
+    }
 }

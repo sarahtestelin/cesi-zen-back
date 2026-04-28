@@ -8,8 +8,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "ressource")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Ressource {
 
     @Id
@@ -18,10 +20,10 @@ public class Ressource {
     private UUID id;
 
     @Column(name = "ressource_is_active", nullable = false)
-    private boolean ressourceIsActive;
+    private boolean ressourceIsActive = true;
 
     @Column(name = "ressource_is_used", nullable = false)
-    private boolean ressourceIsUsed;
+    private boolean ressourceIsUsed = true;
 
     @Column(name = "ressource_title", nullable = false, length = 150)
     private String title;
@@ -32,6 +34,35 @@ public class Ressource {
     @Column(name = "status", nullable = false, length = 150)
     private String status;
 
+    @Column(name = "category", nullable = false, length = 100)
+    private String category;
+
     @Column(name = "ressource_created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Integer version;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+
+        if (status == null || status.isBlank()) {
+            status = "PUBLISHED";
+        }
+
+        updatedAt = LocalDateTime.now();
+        ressourceIsUsed = true;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

@@ -62,13 +62,32 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/password/reset-request").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/password/reset").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/surveys/anonymous").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/*/history").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/ressources").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/ressources/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/ressources/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/ressources/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/*").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/diagnostics/questions").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/diagnostics/anonymous").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/diagnostics/submit").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/diagnostics/results/me").authenticated()
+
+                        .requestMatchers("/api/v1/diagnostics/admin/**").hasRole("ADMIN")
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
