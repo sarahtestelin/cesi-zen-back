@@ -30,7 +30,7 @@ public class EmailServiceImpl implements EmailService {
 
                 Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.
 
-                L'équipe CESIZen
+                CESIZen
                 """.formatted(pseudo, resetLink));
 
         javaMailSender.send(message);

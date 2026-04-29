@@ -47,3 +47,5 @@ security:
 app:
   frontend:
     reset-password-url: https://localhost:8443/reset-password
+  account:
+    inactivity-days: 90
