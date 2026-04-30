@@ -4,17 +4,23 @@ import com.cesi_zen_back.cesi_zen_back.dto.AuthResponseDto;
 import com.cesi_zen_back.cesi_zen_back.dto.LoginDto;
 import com.cesi_zen_back.cesi_zen_back.dto.RegisterUserDto;
 import com.cesi_zen_back.cesi_zen_back.service.AuthService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+    private static final Duration REFRESH_TOKEN_COOKIE_DURATION = Duration.ofDays(7);
 
     private final AuthService authService;
 
@@ -40,7 +46,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponseDto> refresh(
-            @CookieValue(value = "refreshToken", required = false) String refreshToken,
+            @CookieValue(value = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         AuthResponseDto authResponse = authService.refresh(refreshToken);
@@ -50,7 +56,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @CookieValue(value = "refreshToken", required = false) String refreshToken,
+            @CookieValue(value = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         authService.logout(refreshToken);
@@ -59,20 +65,26 @@ public class AuthController {
     }
 
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/api/auth");
-        cookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/api/auth")
+                .maxAge(REFRESH_TOKEN_COOKIE_DURATION)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     private void deleteRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("refreshToken", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/api/auth");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/api/auth")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
