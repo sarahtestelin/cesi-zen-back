@@ -11,6 +11,8 @@ public record UserDataExportDto(
         boolean active,
         LocalDateTime lastConnectionAt,
         String role,
-        List<DiagnosticResultResponseDto> diagnosticResults
+        List<DiagnosticResultResponseDto> diagnosticResults,
+        List<HistoricEtatResponseDto> histories,
+        List<AdminAuditLogExportDto> auditLogs
 ) {
 }

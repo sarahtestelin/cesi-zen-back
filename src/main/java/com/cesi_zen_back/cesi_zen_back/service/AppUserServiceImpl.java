@@ -1,15 +1,22 @@
 package com.cesi_zen_back.cesi_zen_back.service;
 
+import com.cesi_zen_back.cesi_zen_back.dto.AdminAuditLogExportDto;
 import com.cesi_zen_back.cesi_zen_back.dto.AppUserDto;
 import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticResultResponseDto;
+import com.cesi_zen_back.cesi_zen_back.dto.HistoricEtatResponseDto;
 import com.cesi_zen_back.cesi_zen_back.dto.UpdateCurrentUserDto;
 import com.cesi_zen_back.cesi_zen_back.dto.UserDataExportDto;
+import com.cesi_zen_back.cesi_zen_back.entity.AdminAuditLog;
 import com.cesi_zen_back.cesi_zen_back.entity.AppUser;
 import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticResult;
+import com.cesi_zen_back.cesi_zen_back.entity.HistoricEtat;
 import com.cesi_zen_back.cesi_zen_back.exception.BadRequestException;
+import com.cesi_zen_back.cesi_zen_back.mapper.HistoricEtatMapper;
 import com.cesi_zen_back.cesi_zen_back.mapper.UserMapper;
+import com.cesi_zen_back.cesi_zen_back.repository.AdminAuditLogRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.AppUserRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticResultRepository;
+import com.cesi_zen_back.cesi_zen_back.repository.HistoricEtatRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.RefreshTokenRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.ResetPasswordRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,6 +38,8 @@ public class AppUserServiceImpl implements AppUserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final ResetPasswordRepository resetPasswordRepository;
     private final DiagnosticResultRepository diagnosticResultRepository;
+    private final HistoricEtatRepository historicEtatRepository;
+    private final AdminAuditLogRepository adminAuditLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminAuditService adminAuditService;
 
@@ -42,11 +52,23 @@ public class AppUserServiceImpl implements AppUserService {
     @Override
     public UserDataExportDto exportCurrentUserData(String mail) {
         AppUser user = findUserByMail(mail);
+        UUID userId = user.getIdUser();
 
         List<DiagnosticResultResponseDto> diagnosticResults =
-                diagnosticResultRepository.findByAppUserIdUserOrderByCreatedAtDesc(user.getIdUser())
+                diagnosticResultRepository.findByAppUserIdUserOrderByCreatedAtDesc(userId)
                         .stream()
                         .map(this::toDiagnosticResultDto)
+                        .toList();
+
+        List<HistoricEtatResponseDto> histories = getUserHistories(userId)
+                .stream()
+                .map(HistoricEtatMapper::toDto)
+                .toList();
+
+        List<AdminAuditLogExportDto> auditLogs =
+                adminAuditLogRepository.findByTargetIdOrderByCreatedAtDesc(userId.toString())
+                        .stream()
+                        .map(this::toAdminAuditLogExportDto)
                         .toList();
 
         return new UserDataExportDto(
@@ -56,7 +78,9 @@ public class AppUserServiceImpl implements AppUserService {
                 user.isActive(),
                 user.getLastConnexion(),
                 user.getRole().getRoleName(),
-                diagnosticResults
+                diagnosticResults,
+                histories,
+                auditLogs
         );
     }
 
@@ -188,12 +212,34 @@ public class AppUserServiceImpl implements AppUserService {
         diagnosticResults.forEach(result -> result.setAppUser(null));
         diagnosticResultRepository.saveAll(diagnosticResults);
 
+        List<HistoricEtat> histories = getUserHistories(userId);
+        histories.forEach(history -> {
+            history.setAppUser(null);
+            history.setEntityId(null);
+            history.setOldValue("[ANONYMIZED_RGPD]");
+            history.setNewValue("[ANONYMIZED_RGPD]");
+            history.setComment("Historique anonymisé suite à une demande RGPD.");
+        });
+        historicEtatRepository.saveAll(histories);
+
         user.setMail(anonymizedValue + "@deleted.local");
         user.setPseudo(anonymizedValue);
         user.setActive(false);
         user.setHashedPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
 
         appUserRepository.save(user);
+    }
+
+    private List<HistoricEtat> getUserHistories(UUID userId) {
+        LinkedHashMap<UUID, HistoricEtat> histories = new LinkedHashMap<>();
+
+        historicEtatRepository.findByAppUserIdUserOrderByModificationDateDesc(userId)
+                .forEach(history -> histories.put(history.getId(), history));
+
+        historicEtatRepository.findByEntityTypeAndEntityIdOrderByModificationDateDesc(TARGET_TYPE_USER, userId)
+                .forEach(history -> histories.put(history.getId(), history));
+
+        return histories.values().stream().toList();
     }
 
     private AppUser findUserByMail(String mail) {
@@ -213,6 +259,17 @@ public class AppUserServiceImpl implements AppUserService {
                 result.getLevel(),
                 result.getMessage(),
                 result.getCreatedAt()
+        );
+    }
+
+    private AdminAuditLogExportDto toAdminAuditLogExportDto(AdminAuditLog log) {
+        return new AdminAuditLogExportDto(
+                log.getId(),
+                log.getAction(),
+                log.getTargetType(),
+                log.getTargetId(),
+                log.getDetails(),
+                log.getCreatedAt()
         );
     }
 }
