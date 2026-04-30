@@ -97,6 +97,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/password/change").authenticated()
 
                         .requestMatchers("/api/users/me").authenticated()
+                        .requestMatchers("/api/users/me/export").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/users/*").hasRole("ADMIN")

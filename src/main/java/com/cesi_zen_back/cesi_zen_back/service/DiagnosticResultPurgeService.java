@@ -1,4 +1,6 @@
 package com.cesi_zen_back.cesi_zen_back.service;
 
-public class DiagnosticResultPurgeService {
+public interface DiagnosticResultPurgeService {
+
+    long purgeOldDiagnosticResults();
 }

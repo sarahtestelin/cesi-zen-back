@@ -1,0 +1,57 @@
+-- liquibase formatted sql
+-- changeset sarah:011_insert_holmes_rahe_questions
+
+DELETE FROM diagnostic_question;
+
+INSERT INTO diagnostic_question (
+    diagnostic_question_id,
+    question,
+    score,
+    is_active,
+    created_at,
+    updated_at
+)
+VALUES
+    (gen_random_uuid(), 'Décès du conjoint', 100, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Divorce', 73, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Séparation', 65, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Séjour en prison', 63, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Décès d’un proche parent', 63, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Maladies ou blessures personnelles', 53, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Mariage', 50, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Perte d’emploi', 47, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Réconciliation avec le conjoint', 45, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Retraite', 45, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification de l’état de santé d’un membre de la famille', 44, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Grossesse', 40, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Difficultés sexuelles', 39, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Ajout d’un membre dans la famille', 39, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Changement dans la vie professionnelle', 39, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification de la situation financière', 38, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Mort d’un ami proche', 37, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Changement de carrière', 36, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification du nombre de disputes avec le conjoint', 35, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Hypothèque supérieure à un an de salaire', 31, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Saisie d’hypothèque ou de prêt', 30, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification de ses responsabilités professionnelles', 29, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Départ de l’un des enfants', 29, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Problème avec les beaux-parents', 29, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Succès personnel éclatant', 28, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Début ou fin d’emploi du conjoint', 26, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Première ou dernière année d’études', 26, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification de ses conditions de vie', 25, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Changements dans ses habitudes personnelles', 24, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Difficultés avec son patron', 23, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification des heures et des conditions de travail', 20, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Changement de domicile', 20, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Changement d’école', 20, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Changement du type ou de la quantité de loisirs', 19, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification des activités religieuses', 19, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification des activités sociales', 18, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Hypothèque ou prêt inférieur à un an de salaire', 17, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification des habitudes de sommeil', 16, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification du nombre de réunions familiales', 15, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Modification des habitudes alimentaires', 15, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Voyage ou vacances', 13, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Noël', 12, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (gen_random_uuid(), 'Infractions mineures à la loi', 11, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

@@ -1,7 +1,9 @@
 package com.cesi_zen_back.cesi_zen_back.service;
 
 import com.cesi_zen_back.cesi_zen_back.dto.AppUserDto;
+import com.cesi_zen_back.cesi_zen_back.dto.DiagnosticResultResponseDto;
 import com.cesi_zen_back.cesi_zen_back.dto.UpdateCurrentUserDto;
+import com.cesi_zen_back.cesi_zen_back.dto.UserDataExportDto;
 import com.cesi_zen_back.cesi_zen_back.entity.AppUser;
 import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticResult;
 import com.cesi_zen_back.cesi_zen_back.exception.BadRequestException;
@@ -22,25 +24,46 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AppUserServiceImpl implements AppUserService {
 
+    private static final String TARGET_TYPE_USER = "APP_USER";
+
     private final AppUserRepository appUserRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ResetPasswordRepository resetPasswordRepository;
     private final DiagnosticResultRepository diagnosticResultRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdminAuditService adminAuditService;
 
     @Override
     public AppUserDto getCurrentUser(String mail) {
-        AppUser user = appUserRepository.findByMail(mail)
-                .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
-
+        AppUser user = findUserByMail(mail);
         return UserMapper.toDto(user);
+    }
+
+    @Override
+    public UserDataExportDto exportCurrentUserData(String mail) {
+        AppUser user = findUserByMail(mail);
+
+        List<DiagnosticResultResponseDto> diagnosticResults =
+                diagnosticResultRepository.findByAppUserIdUserOrderByCreatedAtDesc(user.getIdUser())
+                        .stream()
+                        .map(this::toDiagnosticResultDto)
+                        .toList();
+
+        return new UserDataExportDto(
+                user.getIdUser(),
+                user.getMail(),
+                user.getPseudo(),
+                user.isActive(),
+                user.getLastConnexion(),
+                user.getRole().getRoleName(),
+                diagnosticResults
+        );
     }
 
     @Override
     @Transactional
     public AppUserDto updateCurrentUser(String currentMail, UpdateCurrentUserDto dto) {
-        AppUser user = appUserRepository.findByMail(currentMail)
-                .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
+        AppUser user = findUserByMail(currentMail);
 
         appUserRepository.findByMail(dto.mail())
                 .filter(existingUser -> !existingUser.getIdUser().equals(user.getIdUser()))
@@ -61,9 +84,100 @@ public class AppUserServiceImpl implements AppUserService {
     @Override
     @Transactional
     public void anonymizeCurrentUser(String currentMail) {
-        AppUser user = appUserRepository.findByMail(currentMail)
-                .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
+        AppUser user = findUserByMail(currentMail);
+        anonymizeUser(user);
+    }
 
+    @Override
+    public List<AppUserDto> getAllUsers() {
+        return appUserRepository.findAll()
+                .stream()
+                .map(UserMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public AppUserDto getUserById(UUID id) {
+        AppUser user = findUserById(id);
+        return UserMapper.toDto(user);
+    }
+
+    @Override
+    @Transactional
+    public AppUserDto updateUser(UUID id, AppUserDto appUserDto, String adminMail) {
+        AppUser user = findUserById(id);
+
+        user.setMail(appUserDto.mail());
+        user.setPseudo(appUserDto.pseudo());
+        user.setActive(appUserDto.appUserIsActive());
+
+        AppUser savedUser = appUserRepository.save(user);
+
+        adminAuditService.log(
+                adminMail,
+                "UPDATE_USER",
+                TARGET_TYPE_USER,
+                id.toString(),
+                "Modification du compte utilisateur par un administrateur."
+        );
+
+        return UserMapper.toDto(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(UUID id, String adminMail) {
+        AppUser user = findUserById(id);
+        anonymizeUser(user);
+
+        adminAuditService.log(
+                adminMail,
+                "ANONYMIZE_USER",
+                TARGET_TYPE_USER,
+                id.toString(),
+                "Anonymisation RGPD du compte utilisateur par un administrateur."
+        );
+    }
+
+    @Override
+    @Transactional
+    public AppUserDto disableUser(UUID id, String adminMail) {
+        AppUser user = findUserById(id);
+        user.setActive(false);
+
+        AppUser savedUser = appUserRepository.save(user);
+
+        adminAuditService.log(
+                adminMail,
+                "DISABLE_USER",
+                TARGET_TYPE_USER,
+                id.toString(),
+                "Désactivation du compte utilisateur par un administrateur."
+        );
+
+        return UserMapper.toDto(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public AppUserDto enableUser(UUID id, String adminMail) {
+        AppUser user = findUserById(id);
+        user.setActive(true);
+
+        AppUser savedUser = appUserRepository.save(user);
+
+        adminAuditService.log(
+                adminMail,
+                "ENABLE_USER",
+                TARGET_TYPE_USER,
+                id.toString(),
+                "Réactivation du compte utilisateur par un administrateur."
+        );
+
+        return UserMapper.toDto(savedUser);
+    }
+
+    private void anonymizeUser(AppUser user) {
         UUID userId = user.getIdUser();
         String anonymizedValue = "deleted-user-" + userId;
 
@@ -82,64 +196,23 @@ public class AppUserServiceImpl implements AppUserService {
         appUserRepository.save(user);
     }
 
-    @Override
-    public List<AppUserDto> getAllUsers() {
-        return appUserRepository.findAll()
-                .stream()
-                .map(UserMapper::toDto)
-                .toList();
-    }
-
-    @Override
-    public AppUserDto getUserById(UUID id) {
-        AppUser user = appUserRepository.findById(id)
+    private AppUser findUserByMail(String mail) {
+        return appUserRepository.findByMail(mail)
                 .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
-
-        return UserMapper.toDto(user);
     }
 
-    @Override
-    @Transactional
-    public AppUserDto updateUser(UUID id, AppUserDto appUserDto) {
-        AppUser user = appUserRepository.findById(id)
+    private AppUser findUserById(UUID id) {
+        return appUserRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
-
-        user.setMail(appUserDto.mail());
-        user.setPseudo(appUserDto.pseudo());
-        user.setActive(appUserDto.appUserIsActive());
-
-        return UserMapper.toDto(appUserRepository.save(user));
     }
 
-    @Override
-    @Transactional
-    public void deleteUser(UUID id) {
-        if (!appUserRepository.existsById(id)) {
-            throw new BadRequestException("Utilisateur introuvable.");
-        }
-
-        appUserRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional
-    public AppUserDto disableUser(UUID id) {
-        AppUser user = appUserRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
-
-        user.setActive(false);
-
-        return UserMapper.toDto(appUserRepository.save(user));
-    }
-
-    @Override
-    @Transactional
-    public AppUserDto enableUser(UUID id) {
-        AppUser user = appUserRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Utilisateur introuvable."));
-
-        user.setActive(true);
-
-        return UserMapper.toDto(appUserRepository.save(user));
+    private DiagnosticResultResponseDto toDiagnosticResultDto(DiagnosticResult result) {
+        return new DiagnosticResultResponseDto(
+                result.getId(),
+                result.getFinalScore(),
+                result.getLevel(),
+                result.getMessage(),
+                result.getCreatedAt()
+        );
     }
 }

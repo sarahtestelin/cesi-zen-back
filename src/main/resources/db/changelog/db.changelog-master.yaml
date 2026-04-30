@@ -17,3 +17,7 @@ databaseChangeLog:
       file: db/changelog/008_create_diagnostic_tables.sql
   - include:
       file: db/changelog/009_create_diagnostic_result_config.sql
+  - include:
+      file: db/changelog/010_create_admin_audit_log.sql
+  - include:
+      file: db/changelog/011_insert_holmes_rahe_questions.sql
