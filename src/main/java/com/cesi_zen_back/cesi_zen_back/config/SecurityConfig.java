@@ -1,13 +1,14 @@
 package com.cesi_zen_back.cesi_zen_back.config;
 
+import com.cesi_zen_back.cesi_zen_back.service.RateLimitService;
 import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,11 +16,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    @Bean
+    public RateLimitFilter rateLimitFilter(RateLimitService rateLimitService) {
+        return new RateLimitFilter(rateLimitService);
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -37,22 +48,39 @@ public class SecurityConfig {
                 return java.util.List.of();
             }
 
-            return java.util.List.of(
-                    new SimpleGrantedAuthority("ROLE_" + role)
-            );
+            return java.util.List.of(new SimpleGrantedAuthority("ROLE_" + role));
         });
 
         return converter;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            RateLimitFilter rateLimitFilter
+    ) throws Exception {
+
+        CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
+        PathPatternRequestMatcher.Builder matcherBuilder = PathPatternRequestMatcher.withDefaults();
+
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(csrfHandler)
+                        .requireCsrfProtectionMatcher(new OrRequestMatcher(
+                                matcherBuilder.matcher(HttpMethod.POST, "/api/auth/refresh"),
+                                matcherBuilder.matcher(HttpMethod.POST, "/api/auth/logout")
+                        ))
+                )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                .addFilterBefore(rateLimitFilter, BearerTokenAuthenticationFilter.class)
+
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/csrf").permitAll()
+
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -66,9 +94,17 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/password/reset-request").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/password/reset").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/password/change").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/me").authenticated()
+                        .requestMatchers("/api/users/me/export").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/disable").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/enable").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin/*").hasRole("ADMIN")
@@ -83,12 +119,10 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/diagnostics/questions").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/diagnostics/anonymous").permitAll()
-
                         .requestMatchers(HttpMethod.POST, "/api/v1/diagnostics/submit").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/diagnostics/results/me").authenticated()
 
                         .requestMatchers("/api/v1/diagnostics/admin/**").hasRole("ADMIN")
-
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()

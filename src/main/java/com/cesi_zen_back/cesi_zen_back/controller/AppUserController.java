@@ -1,7 +1,10 @@
 package com.cesi_zen_back.cesi_zen_back.controller;
 
 import com.cesi_zen_back.cesi_zen_back.dto.AppUserDto;
+import com.cesi_zen_back.cesi_zen_back.dto.UpdateCurrentUserDto;
+import com.cesi_zen_back.cesi_zen_back.dto.UserDataExportDto;
 import com.cesi_zen_back.cesi_zen_back.service.AppUserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -22,6 +25,24 @@ public class AppUserController {
         return appUserService.getCurrentUser(jwt.getSubject());
     }
 
+    @GetMapping("/me/export")
+    public UserDataExportDto exportCurrentUserData(@AuthenticationPrincipal Jwt jwt) {
+        return appUserService.exportCurrentUserData(jwt.getSubject());
+    }
+
+    @PutMapping("/me")
+    public AppUserDto updateCurrentUser(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody UpdateCurrentUserDto dto
+    ) {
+        return appUserService.updateCurrentUser(jwt.getSubject(), dto);
+    }
+
+    @DeleteMapping("/me")
+    public void anonymizeCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        appUserService.anonymizeCurrentUser(jwt.getSubject());
+    }
+
     @GetMapping
     public List<AppUserDto> getAllUsers() {
         return appUserService.getAllUsers();
@@ -35,23 +56,33 @@ public class AppUserController {
     @PutMapping("/{id}")
     public AppUserDto updateUser(
             @PathVariable UUID id,
-            @RequestBody AppUserDto appUserDto
+            @RequestBody AppUserDto appUserDto,
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        return appUserService.updateUser(id, appUserDto);
+        return appUserService.updateUser(id, appUserDto, jwt.getSubject());
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable UUID id) {
-        appUserService.deleteUser(id);
+    public void deleteUser(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        appUserService.deleteUser(id, jwt.getSubject());
     }
 
     @PatchMapping("/{id}/disable")
-    public AppUserDto disableUser(@PathVariable UUID id) {
-        return appUserService.disableUser(id);
+    public AppUserDto disableUser(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return appUserService.disableUser(id, jwt.getSubject());
     }
 
     @PatchMapping("/{id}/enable")
-    public AppUserDto enableUser(@PathVariable UUID id) {
-        return appUserService.enableUser(id);
+    public AppUserDto enableUser(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return appUserService.enableUser(id, jwt.getSubject());
     }
 }
