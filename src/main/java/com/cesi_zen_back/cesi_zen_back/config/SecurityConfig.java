@@ -96,8 +96,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/password/reset").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/password/change").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/me").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/disable").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/enable").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/ressources/admin/*").hasRole("ADMIN")

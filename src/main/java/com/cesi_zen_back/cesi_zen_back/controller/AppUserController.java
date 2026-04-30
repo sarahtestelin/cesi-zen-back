@@ -1,7 +1,9 @@
 package com.cesi_zen_back.cesi_zen_back.controller;
 
 import com.cesi_zen_back.cesi_zen_back.dto.AppUserDto;
+import com.cesi_zen_back.cesi_zen_back.dto.UpdateCurrentUserDto;
 import com.cesi_zen_back.cesi_zen_back.service.AppUserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -20,6 +22,19 @@ public class AppUserController {
     @GetMapping("/me")
     public AppUserDto getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         return appUserService.getCurrentUser(jwt.getSubject());
+    }
+
+    @PutMapping("/me")
+    public AppUserDto updateCurrentUser(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody UpdateCurrentUserDto dto
+    ) {
+        return appUserService.updateCurrentUser(jwt.getSubject(), dto);
+    }
+
+    @DeleteMapping("/me")
+    public void anonymizeCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        appUserService.anonymizeCurrentUser(jwt.getSubject());
     }
 
     @GetMapping

@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface DiagnosticResultRepository extends JpaRepository<DiagnosticResult, UUID> {
 
     List<DiagnosticResult> findByAppUserIdUserOrderByCreatedAtDesc(UUID appUserId);
+
+    List<DiagnosticResult> findByAppUserIdUser(UUID appUserId);
 }
