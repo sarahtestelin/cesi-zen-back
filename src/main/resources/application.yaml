@@ -47,5 +47,17 @@ security:
 app:
   frontend:
     reset-password-url: https://localhost:8443/reset-password
+
   account:
     inactivity-days: 90
+
+  diagnostic:
+    retention-days: 365
+    purge-cron: "0 0 23 * * *"
+
+  security:
+    allowed-origins:
+      - https://localhost:4200
+      - http://localhost:4200
+      - https://localhost:8443
+      - http://localhost:8080

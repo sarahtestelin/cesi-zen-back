@@ -1,5 +1,6 @@
 package com.cesi_zen_back.cesi_zen_back.config;
 
+import com.cesi_zen_back.cesi_zen_back.exception.BadRequestException;
 import com.cesi_zen_back.cesi_zen_back.service.RateLimitService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,13 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-@Component
 @RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
@@ -38,14 +37,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
             if (HttpMethod.POST.matches(method) && "/api/password/reset-request".equals(path)) {
                 rateLimitService.checkRateLimit("RESET_PASSWORD:" + ip, 3, 15);
             }
-
-            filterChain.doFilter(request, response);
-        } catch (Exception e) {
+        } catch (BadRequestException e) {
             response.setStatus(429);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"message\":\"Trop de tentatives. Veuillez réessayer plus tard.\"}");
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private String getClientIp(HttpServletRequest request) {
