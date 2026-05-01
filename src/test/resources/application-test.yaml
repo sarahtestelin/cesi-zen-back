@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:cesizen_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  liquibase:
+    enabled: false
+
+server:
+  ssl:
+    enabled: false
+
+security:
+  jwt:
+    secret: long-random-secret-for-cesizen-project-test-123456789
+    issuer: cesi-zen-back-test
+    access-token-validity-minutes: 15
+
+app:
+  frontend:
+    reset-password-url: http://localhost:4200/reset-password
+
+  account:
+    inactivity-days: 90
+
+  diagnostic:
+    retention-days: 365
+    purge-cron: "0 0 23 * * *"
+
+  security:
+    allowed-origins:
+      - http://localhost:4200
