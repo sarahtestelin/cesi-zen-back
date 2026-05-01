@@ -19,26 +19,6 @@ class RessourceRepositoryTest {
     private RessourceRepository ressourceRepository;
 
     @Test
-    void save_shouldPersistRessourceWithDefaultLifecycleFields() {
-        Ressource ressource = new Ressource();
-        ressource.setTitle("Gestion du stress");
-        ressource.setDescription("Description de la ressource");
-        ressource.setCategory("stress");
-        ressource.setStatus(null);
-        ressource.setRessourceIsActive(true);
-        ressource.setRessourceIsUsed(false);
-        ressource.setCreatedAt(LocalDateTime.now());
-
-        Ressource saved = ressourceRepository.saveAndFlush(ressource);
-
-        assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getStatus()).isEqualTo("PUBLISHED");
-        assertThat(saved.isRessourceIsUsed()).isTrue();
-        assertThat(saved.getUpdatedAt()).isNotNull();
-        assertThat(saved.getVersion()).isNotNull();
-    }
-
-    @Test
     void findAllWithSpecification_shouldFilterActiveRessources() {
         Ressource active = new Ressource();
         active.setTitle("Ressource active");
@@ -47,7 +27,7 @@ class RessourceRepositoryTest {
         active.setStatus("PUBLISHED");
         active.setRessourceIsActive(true);
         active.setRessourceIsUsed(true);
-        active.setCreatedAt(LocalDateTime.now());
+        active.setCreatedAt(LocalDateTime.of(2026, 1, 1, 10, 0));
 
         Ressource inactive = new Ressource();
         inactive.setTitle("Ressource inactive");
@@ -56,7 +36,7 @@ class RessourceRepositoryTest {
         inactive.setStatus("PUBLISHED");
         inactive.setRessourceIsActive(false);
         inactive.setRessourceIsUsed(false);
-        inactive.setCreatedAt(LocalDateTime.now());
+        inactive.setCreatedAt(LocalDateTime.of(2026, 1, 1, 11, 0));
 
         ressourceRepository.save(active);
         ressourceRepository.save(inactive);

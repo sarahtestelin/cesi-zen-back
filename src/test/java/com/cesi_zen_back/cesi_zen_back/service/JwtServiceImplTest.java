@@ -51,7 +51,7 @@ class JwtServiceImplTest {
 
         assertThat(token).isNotBlank();
         assertThat(decodedToken.getSubject()).isEqualTo("user@test.fr");
-        assertThat(decodedToken.getIssuer().toString()).isEqualTo("cesi-zen-back-test");
+        assertThat(decodedToken.getClaimAsString("iss")).isEqualTo("cesi-zen-back-test");
         assertThat(decodedToken.getClaimAsString("userId")).isEqualTo(user.getIdUser().toString());
         assertThat(decodedToken.getClaimAsString("pseudo")).isEqualTo("Sarah");
         assertThat(decodedToken.getClaimAsString("role")).isEqualTo("USER");

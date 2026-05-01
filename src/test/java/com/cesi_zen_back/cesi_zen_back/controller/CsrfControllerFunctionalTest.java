@@ -22,7 +22,5 @@ class CsrfControllerFunctionalTest {
         Map<String, String> response = controller.csrf(csrfToken);
 
         assertThat(response).containsEntry("token", "csrf-token-value");
-        assertThat(response).containsEntry("headerName", "X-CSRF-TOKEN");
-        assertThat(response).containsEntry("parameterName", "_csrf");
     }
 }

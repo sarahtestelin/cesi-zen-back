@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -30,25 +30,25 @@ class SecurityTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Test
-    void protectedAdminEndpoint_shouldRejectAnonymousUser() throws Exception {
+    void protectedUsersEndpoint_shouldRejectAnonymousUser() throws Exception {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void publicRegisterEndpoint_shouldStayAccessibleWithoutAuthentication() throws Exception {
-        String body = """
+        String invalidBody = """
                 {
-                  "mail": "new@test.fr",
-                  "pseudo": "SarahTest",
-                  "password": "Password123!",
+                  "mail": "not-an-email",
+                  "pseudo": "Sa",
+                  "password": "short",
                   "deviceInfo": "JUnit"
                 }
                 """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(APPLICATION_JSON)
-                        .content(body))
+                        .content(invalidBody))
                 .andExpect(status().isBadRequest());
     }
 

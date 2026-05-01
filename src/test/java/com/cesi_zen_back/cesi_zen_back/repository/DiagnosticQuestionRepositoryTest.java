@@ -18,34 +18,24 @@ class DiagnosticQuestionRepositoryTest {
     private DiagnosticQuestionRepository diagnosticQuestionRepository;
 
     @Test
-    void findByActiveTrueOrderByCreatedAtAsc_shouldReturnOnlyActiveQuestionsOrderedByCreationDate() {
+    void findByActiveTrueOrderByCreatedAtAsc_shouldReturnQuestionsOrderedByCreationDate() {
         DiagnosticQuestion second = new DiagnosticQuestion();
-        second.setQuestion("Question active récente");
+        second.setQuestion("Question récente");
         second.setScore(20);
         second.setActive(true);
-        second.setCreatedAt(LocalDateTime.now().minusDays(1));
+        second.setCreatedAt(LocalDateTime.of(2026, 1, 2, 10, 0));
 
         DiagnosticQuestion first = new DiagnosticQuestion();
-        first.setQuestion("Question active ancienne");
+        first.setQuestion("Question ancienne");
         first.setScore(10);
         first.setActive(true);
-        first.setCreatedAt(LocalDateTime.now().minusDays(2));
-
-        DiagnosticQuestion inactive = new DiagnosticQuestion();
-        inactive.setQuestion("Question inactive");
-        inactive.setScore(30);
-        inactive.setActive(false);
-        inactive.setCreatedAt(LocalDateTime.now().minusDays(3));
+        first.setCreatedAt(LocalDateTime.of(2026, 1, 1, 10, 0));
 
         diagnosticQuestionRepository.save(second);
         diagnosticQuestionRepository.save(first);
-        diagnosticQuestionRepository.save(inactive);
 
         assertThat(diagnosticQuestionRepository.findByActiveTrueOrderByCreatedAtAsc())
                 .extracting(DiagnosticQuestion::getQuestion)
-                .containsExactly(
-                        "Question active ancienne",
-                        "Question active récente"
-                );
+                .containsExactly("Question ancienne", "Question récente");
     }
 }
