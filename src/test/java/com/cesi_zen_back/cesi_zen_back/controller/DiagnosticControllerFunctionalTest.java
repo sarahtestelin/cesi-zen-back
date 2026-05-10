@@ -97,7 +97,7 @@ class DiagnosticControllerFunctionalTest {
 
         String body = """
                 {
-                  "selectedQuestionIds": ["%s"]
+                  "questionIds": ["%s"]
                 }
                 """.formatted(questionId);
 
@@ -113,14 +113,14 @@ class DiagnosticControllerFunctionalTest {
         ArgumentCaptor<DiagnosticRequestDto> captor = ArgumentCaptor.forClass(DiagnosticRequestDto.class);
         verify(diagnosticService).calculateAnonymous(captor.capture());
 
-        assertThat(captor.getValue().selectedQuestionIds()).containsExactly(questionId);
+        assertThat(captor.getValue().questionIds()).containsExactly(questionId);
     }
 
     @Test
     void calculateAnonymous_shouldRejectEmptyQuestionList() throws Exception {
         String body = """
                 {
-                  "selectedQuestionIds": []
+                  "questionIds": []
                 }
                 """;
 
@@ -139,7 +139,7 @@ class DiagnosticControllerFunctionalTest {
 
         String body = """
                 {
-                  "selectedQuestionIds": ["%s"]
+                  "questionIds": ["%s"]
                 }
                 """.formatted(questionId);
 

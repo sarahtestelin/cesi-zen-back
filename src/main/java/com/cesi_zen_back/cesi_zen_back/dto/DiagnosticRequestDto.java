@@ -6,5 +6,5 @@ import java.util.List;
 import java.util.UUID;
 
 public record DiagnosticRequestDto(
-        @NotEmpty List<UUID> selectedQuestionIds
+        @NotEmpty List<UUID> questionIds
 ) {}

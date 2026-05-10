@@ -165,9 +165,9 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             AppUser user,
             boolean saveResult
     ) {
-        List<DiagnosticQuestion> selectedQuestions = questionRepository.findAllById(request.selectedQuestionIds());
+        List<DiagnosticQuestion> selectedQuestions = questionRepository.findAllById(request.questionIds());
 
-        if (selectedQuestions.size() != request.selectedQuestionIds().size()) {
+        if (selectedQuestions.size() != request.questionIds().size()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Une ou plusieurs questions sont invalides");
         }
 
@@ -206,7 +206,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
     private DiagnosticResultConfig getResultConfig(UUID id) {
         return resultConfigRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Configuration de résultat introuvable"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La configuration des résultats introuvable"));
     }
 
     private DiagnosticResultConfig resolveResultConfig(int finalScore) {

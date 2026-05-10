@@ -95,7 +95,7 @@ class DiagnosticServiceImplTest {
     void calculateAnonymous_shouldCalculateScoreWithoutSavingResult() {
         DiagnosticRequestDto request = new DiagnosticRequestDto(List.of(questionId1, questionId2));
 
-        when(questionRepository.findAllById(request.selectedQuestionIds()))
+        when(questionRepository.findAllById(request.questionIds()))
                 .thenReturn(List.of(q1, q2));
 
         when(resultConfigRepository.findFirstByActiveTrueAndMinScoreLessThanEqualAndMaxScoreGreaterThanEqual(150, 150))
@@ -117,7 +117,7 @@ class DiagnosticServiceImplTest {
 
         DiagnosticRequestDto request = new DiagnosticRequestDto(List.of(questionId1, questionId2));
 
-        when(questionRepository.findAllById(request.selectedQuestionIds()))
+        when(questionRepository.findAllById(request.questionIds()))
                 .thenReturn(List.of(q1, q2));
 
         when(resultConfigRepository.findFirstByActiveTrueAndMinScoreLessThanEqualAndMaxScoreGreaterThanEqual(100, 100))
@@ -132,7 +132,7 @@ class DiagnosticServiceImplTest {
     void calculateAnonymous_shouldRejectUnknownQuestion() {
         DiagnosticRequestDto request = new DiagnosticRequestDto(List.of(questionId1, questionId2));
 
-        when(questionRepository.findAllById(request.selectedQuestionIds()))
+        when(questionRepository.findAllById(request.questionIds()))
                 .thenReturn(List.of(q1));
 
         assertThatThrownBy(() -> diagnosticService.calculateAnonymous(request))
@@ -153,7 +153,7 @@ class DiagnosticServiceImplTest {
         when(appUserRepository.findByMail("user@test.fr"))
                 .thenReturn(Optional.of(user));
 
-        when(questionRepository.findAllById(request.selectedQuestionIds()))
+        when(questionRepository.findAllById(request.questionIds()))
                 .thenReturn(List.of(q1, q2));
 
         when(resultConfigRepository.findFirstByActiveTrueAndMinScoreLessThanEqualAndMaxScoreGreaterThanEqual(150, 150))
