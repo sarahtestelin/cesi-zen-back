@@ -1,9 +1,10 @@
 package com.cesi_zen_back.cesi_zen_back.controller;
 
 import com.cesi_zen_back.cesi_zen_back.dto.HistoricEtatResponseDto;
+import com.cesi_zen_back.cesi_zen_back.dto.RessourceRequestDto;
 import com.cesi_zen_back.cesi_zen_back.dto.RessourceResponseDto;
-import com.cesi_zen_back.cesi_zen_back.entity.Ressource;
 import com.cesi_zen_back.cesi_zen_back.service.RessourceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,14 +52,14 @@ public class RessourceController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    public RessourceResponseDto create(@RequestBody Ressource ressource) {
-        return ressourceService.create(ressource);
+    public RessourceResponseDto create(@Valid @RequestBody RessourceRequestDto dto) {
+        return ressourceService.create(dto);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public RessourceResponseDto update(@PathVariable UUID id, @RequestBody Ressource body) {
-        return ressourceService.update(id, body);
+    public RessourceResponseDto update(@PathVariable UUID id, @Valid @RequestBody RessourceRequestDto dto) {
+        return ressourceService.update(id, dto);
     }
 
     @PatchMapping("/{id}/enable")

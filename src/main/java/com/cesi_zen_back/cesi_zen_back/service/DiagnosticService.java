@@ -22,10 +22,6 @@ public interface DiagnosticService {
 
     DiagnosticQuestionResponseDto updateQuestion(UUID id, DiagnosticQuestionRequestDto request);
 
-    DiagnosticQuestionResponseDto enableQuestion(UUID id);
-
-    DiagnosticQuestionResponseDto disableQuestion(UUID id);
-
     void deleteQuestion(UUID id);
 
     List<DiagnosticResultConfigResponseDto> listResultConfigs();
@@ -33,10 +29,6 @@ public interface DiagnosticService {
     DiagnosticResultConfigResponseDto createResultConfig(DiagnosticResultConfigRequestDto request);
 
     DiagnosticResultConfigResponseDto updateResultConfig(UUID id, DiagnosticResultConfigRequestDto request);
-
-    DiagnosticResultConfigResponseDto enableResultConfig(UUID id);
-
-    DiagnosticResultConfigResponseDto disableResultConfig(UUID id);
 
     void deleteResultConfig(UUID id);
 }

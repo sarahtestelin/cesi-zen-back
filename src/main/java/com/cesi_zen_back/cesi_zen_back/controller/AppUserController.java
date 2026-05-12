@@ -6,6 +6,7 @@ import com.cesi_zen_back.cesi_zen_back.dto.UserDataExportDto;
 import com.cesi_zen_back.cesi_zen_back.service.AppUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -44,16 +45,19 @@ public class AppUserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<AppUserDto> getAllUsers() {
         return appUserService.getAllUsers();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public AppUserDto getUserById(@PathVariable UUID id) {
         return appUserService.getUserById(id);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public AppUserDto updateUser(
             @PathVariable UUID id,
             @RequestBody AppUserDto appUserDto,
@@ -63,6 +67,7 @@ public class AppUserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt
@@ -71,6 +76,7 @@ public class AppUserController {
     }
 
     @PatchMapping("/{id}/disable")
+    @PreAuthorize("hasRole('ADMIN')")
     public AppUserDto disableUser(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt
@@ -79,6 +85,7 @@ public class AppUserController {
     }
 
     @PatchMapping("/{id}/enable")
+    @PreAuthorize("hasRole('ADMIN')")
     public AppUserDto enableUser(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt

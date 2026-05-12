@@ -1,8 +1,8 @@
 package com.cesi_zen_back.cesi_zen_back.service;
 
 import com.cesi_zen_back.cesi_zen_back.dto.HistoricEtatResponseDto;
+import com.cesi_zen_back.cesi_zen_back.dto.RessourceRequestDto;
 import com.cesi_zen_back.cesi_zen_back.dto.RessourceResponseDto;
-import com.cesi_zen_back.cesi_zen_back.entity.Ressource;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,9 +17,9 @@ public interface RessourceService {
 
     RessourceResponseDto getAdmin(UUID id);
 
-    RessourceResponseDto create(Ressource ressource);
+    RessourceResponseDto create(RessourceRequestDto dto);
 
-    RessourceResponseDto update(UUID id, Ressource body);
+    RessourceResponseDto update(UUID id, RessourceRequestDto dto);
 
     RessourceResponseDto enable(UUID id);
 
