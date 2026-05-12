@@ -17,4 +17,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
     boolean existsByPseudo(String pseudo);
 
     List<AppUser> findByIsActiveTrueAndLastConnexionBefore(LocalDateTime limitDate);
+
+    long countByIsActiveTrue();
 }
