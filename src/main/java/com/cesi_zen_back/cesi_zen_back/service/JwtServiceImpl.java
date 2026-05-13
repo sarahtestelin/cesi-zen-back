@@ -1,6 +1,7 @@
 package com.cesi_zen_back.cesi_zen_back.service;
 
 import com.cesi_zen_back.cesi_zen_back.entity.AppUser;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import javax.crypto.spec.SecretKeySpec;

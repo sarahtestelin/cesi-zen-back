@@ -65,18 +65,6 @@ public class DiagnosticController {
         return diagnosticService.updateQuestion(id, request);
     }
 
-    @PatchMapping("/admin/questions/{id}/enable")
-    @PreAuthorize("hasRole('ADMIN')")
-    public DiagnosticQuestionResponseDto enableQuestion(@PathVariable UUID id) {
-        return diagnosticService.enableQuestion(id);
-    }
-
-    @PatchMapping("/admin/questions/{id}/disable")
-    @PreAuthorize("hasRole('ADMIN')")
-    public DiagnosticQuestionResponseDto disableQuestion(@PathVariable UUID id) {
-        return diagnosticService.disableQuestion(id);
-    }
-
     @DeleteMapping("/admin/questions/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
@@ -106,18 +94,6 @@ public class DiagnosticController {
             @Valid @RequestBody DiagnosticResultConfigRequestDto request
     ) {
         return diagnosticService.updateResultConfig(id, request);
-    }
-
-    @PatchMapping("/admin/result-configs/{id}/enable")
-    @PreAuthorize("hasRole('ADMIN')")
-    public DiagnosticResultConfigResponseDto enableResultConfig(@PathVariable UUID id) {
-        return diagnosticService.enableResultConfig(id);
-    }
-
-    @PatchMapping("/admin/result-configs/{id}/disable")
-    @PreAuthorize("hasRole('ADMIN')")
-    public DiagnosticResultConfigResponseDto disableResultConfig(@PathVariable UUID id) {
-        return diagnosticService.disableResultConfig(id);
     }
 
     @DeleteMapping("/admin/result-configs/{id}")

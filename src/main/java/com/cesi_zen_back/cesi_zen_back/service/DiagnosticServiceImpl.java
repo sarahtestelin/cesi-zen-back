@@ -86,26 +86,9 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     }
 
     @Override
-    public DiagnosticQuestionResponseDto enableQuestion(UUID id) {
-        DiagnosticQuestion question = getQuestion(id);
-        question.setActive(true);
-
-        return DiagnosticMapper.toQuestionDto(questionRepository.save(question));
-    }
-
-    @Override
-    public DiagnosticQuestionResponseDto disableQuestion(UUID id) {
-        DiagnosticQuestion question = getQuestion(id);
-        question.setActive(false);
-
-        return DiagnosticMapper.toQuestionDto(questionRepository.save(question));
-    }
-
-    @Override
     public void deleteQuestion(UUID id) {
         DiagnosticQuestion question = getQuestion(id);
-        question.setActive(false);
-        questionRepository.save(question);
+        questionRepository.delete(question);
     }
 
     @Override
@@ -138,26 +121,9 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     }
 
     @Override
-    public DiagnosticResultConfigResponseDto enableResultConfig(UUID id) {
-        DiagnosticResultConfig config = getResultConfig(id);
-        config.setActive(true);
-
-        return toResultConfigDto(resultConfigRepository.save(config));
-    }
-
-    @Override
-    public DiagnosticResultConfigResponseDto disableResultConfig(UUID id) {
-        DiagnosticResultConfig config = getResultConfig(id);
-        config.setActive(false);
-
-        return toResultConfigDto(resultConfigRepository.save(config));
-    }
-
-    @Override
     public void deleteResultConfig(UUID id) {
         DiagnosticResultConfig config = getResultConfig(id);
-        config.setActive(false);
-        resultConfigRepository.save(config);
+        resultConfigRepository.delete(config);
     }
 
     private DiagnosticResponseDto calculateDiagnostic(
