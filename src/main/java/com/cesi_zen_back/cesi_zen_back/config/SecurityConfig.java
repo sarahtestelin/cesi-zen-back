@@ -7,8 +7,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,13 +45,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(Environment environment) {
+        List<String> allowedOrigins = Binder.get(environment)
+                .bind("app.security.allowed-origins", Bindable.listOf(String.class))
+                .orElse(List.of("http://localhost:4200"));
+
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:4200",
-                "https://localhost:4200"
-        ));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -80,7 +85,7 @@ public class SecurityConfig {
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/auth/**", "/api/password/reset-request", "/api/password/reset",
-                        "/api/v1/diagnostics/**", "/api/v1/ressources/**", "/api/v1/ressources",
+                        "/api/v1/diagnostics/questions", "/api/v1/diagnostics/anonymous",
                         "/api/csrf", "/error", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -110,6 +115,10 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/users/me").authenticated()
                         .requestMatchers("/api/users/me/export").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ressources/*").permitAll()
+                        .requestMatchers("/api/v1/ressources/**").hasRole("ADMIN")
 
                         .requestMatchers("/api/v1/diagnostics/submit").authenticated()
                         .requestMatchers("/api/v1/diagnostics/results/me").authenticated()

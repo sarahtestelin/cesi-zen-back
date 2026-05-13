@@ -1,6 +1,7 @@
 package com.cesi_zen_back.cesi_zen_back.service;
 
 import com.cesi_zen_back.cesi_zen_back.dto.HistoricEtatResponseDto;
+import com.cesi_zen_back.cesi_zen_back.dto.RessourceRequestDto;
 import com.cesi_zen_back.cesi_zen_back.dto.RessourceResponseDto;
 import com.cesi_zen_back.cesi_zen_back.entity.HistoricEtat;
 import com.cesi_zen_back.cesi_zen_back.entity.Ressource;
@@ -62,8 +63,11 @@ public class RessourceServiceImpl implements RessourceService {
     }
 
     @Override
-    public RessourceResponseDto create(Ressource ressource) {
-        ressource.setId(null);
+    public RessourceResponseDto create(RessourceRequestDto dto) {
+        Ressource ressource = new Ressource();
+        ressource.setTitle(dto.title());
+        ressource.setDescription(dto.description());
+        ressource.setCategory(dto.category());
         ressource.setRessourceIsActive(true);
         ressource.setRessourceIsUsed(true);
         ressource.setCreatedAt(LocalDateTime.now());
@@ -75,16 +79,13 @@ public class RessourceServiceImpl implements RessourceService {
     }
 
     @Override
-    public RessourceResponseDto update(UUID id, Ressource body) {
+    public RessourceResponseDto update(UUID id, RessourceRequestDto dto) {
         Ressource existing = getEntity(id);
         String oldValue = toJson(existing);
 
-        existing.setTitle(body.getTitle());
-        existing.setDescription(body.getDescription());
-        existing.setStatus(body.getStatus());
-        existing.setCategory(body.getCategory());
-        existing.setRessourceIsActive(body.isRessourceIsActive());
-        existing.setRessourceIsUsed(body.isRessourceIsUsed());
+        existing.setTitle(dto.title());
+        existing.setDescription(dto.description());
+        existing.setCategory(dto.category());
 
         Ressource saved = repo.save(existing);
         saveHistory(oldValue, saved, "UPDATE");
