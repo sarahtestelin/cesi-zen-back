@@ -4,17 +4,16 @@ import com.cesi_zen_back.cesi_zen_back.service.RateLimitService;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.boot.context.properties.bind.Bindable;
-import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,6 +23,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,6 +43,24 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CookieCsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repository.setCookiePath("/");
+        repository.setCookieCustomizer(cookie -> {
+            cookie.sameSite("None");
+            cookie.secure(true);
+        });
+        return repository;
+    }
+
+    @Bean
+    public CsrfTokenRequestAttributeHandler csrfTokenRequestHandler() {
+        CsrfTokenRequestAttributeHandler handler = new CsrfTokenRequestAttributeHandler();
+        handler.setCsrfRequestAttributeName(null);
+        return handler;
     }
 
     @Bean
@@ -82,13 +101,29 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain publicFilterChain(
+            HttpSecurity http,
+            CookieCsrfTokenRepository csrfTokenRepository,
+            CsrfTokenRequestAttributeHandler csrfTokenRequestHandler
+    ) throws Exception {
         http
-                .securityMatcher("/api/auth/**", "/api/password/reset-request", "/api/password/reset",
-                        "/api/v1/diagnostics/questions", "/api/v1/diagnostics/anonymous",
-                        "/api/csrf", "/error", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                .securityMatcher(
+                        "/api/auth/**",
+                        "/api/password/reset-request",
+                        "/api/password/reset",
+                        "/api/v1/diagnostics/questions",
+                        "/api/v1/diagnostics/anonymous",
+                        "/api/csrf",
+                        "/error",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html"
+                )
                 .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository)
+                        .csrfTokenRequestHandler(csrfTokenRequestHandler)
+                )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -101,11 +136,16 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain securedFilterChain(
             HttpSecurity http,
-            RateLimitFilter rateLimitFilter
+            RateLimitFilter rateLimitFilter,
+            CookieCsrfTokenRepository csrfTokenRepository,
+            CsrfTokenRequestAttributeHandler csrfTokenRequestHandler
     ) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository)
+                        .csrfTokenRequestHandler(csrfTokenRequestHandler)
+                )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
