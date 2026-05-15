@@ -10,6 +10,7 @@ import com.cesi_zen_back.cesi_zen_back.entity.AdminAuditLog;
 import com.cesi_zen_back.cesi_zen_back.entity.AppUser;
 import com.cesi_zen_back.cesi_zen_back.entity.DiagnosticResult;
 import com.cesi_zen_back.cesi_zen_back.entity.HistoricEtat;
+import com.cesi_zen_back.cesi_zen_back.entity.Role;
 import com.cesi_zen_back.cesi_zen_back.exception.BadRequestException;
 import com.cesi_zen_back.cesi_zen_back.mapper.HistoricEtatMapper;
 import com.cesi_zen_back.cesi_zen_back.mapper.UserMapper;
@@ -19,6 +20,7 @@ import com.cesi_zen_back.cesi_zen_back.repository.DiagnosticResultRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.HistoricEtatRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.RefreshTokenRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.ResetPasswordRepository;
+import com.cesi_zen_back.cesi_zen_back.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class AppUserServiceImpl implements AppUserService {
     private final HistoricEtatRepository historicEtatRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
     private final AdminAuditService adminAuditService;
 
     @Override
@@ -197,6 +200,36 @@ public class AppUserServiceImpl implements AppUserService {
                 id.toString(),
                 "Réactivation du compte utilisateur par un administrateur."
         );
+
+        return UserMapper.toDto(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public AppUserDto promoteUser(UUID id, String adminMail) {
+        return changeUserRole(id, adminMail, "ADMIN", "PROMOTE_USER", "Promotion au rôle ADMIN par un administrateur.");
+    }
+
+    @Override
+    @Transactional
+    public AppUserDto demoteUser(UUID id, String adminMail) {
+        AppUser admin = findUserByMail(adminMail);
+        if (admin.getIdUser().equals(id)) {
+            throw new BadRequestException("Vous ne pouvez pas retirer votre propre rôle administrateur.");
+        }
+        return changeUserRole(id, adminMail, "USER", "DEMOTE_USER", "Rétrogradation au rôle USER par un administrateur.");
+    }
+
+    private AppUserDto changeUserRole(UUID id, String adminMail, String roleName, String action, String details) {
+        AppUser user = findUserById(id);
+
+        Role role = roleRepository.findByRoleName(roleName)
+                .orElseThrow(() -> new BadRequestException("Rôle " + roleName + " introuvable."));
+
+        user.setRole(role);
+        AppUser savedUser = appUserRepository.save(user);
+
+        adminAuditService.log(adminMail, action, TARGET_TYPE_USER, id.toString(), details);
 
         return UserMapper.toDto(savedUser);
     }

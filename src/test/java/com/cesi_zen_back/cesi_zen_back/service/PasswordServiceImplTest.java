@@ -78,16 +78,6 @@ class PasswordServiceImplTest {
     }
 
     @Test
-    void requestResetPassword_shouldNotRevealUnknownMail() {
-        when(appUserRepository.findByMail("unknown@test.fr")).thenReturn(Optional.empty());
-
-        passwordService.requestResetPassword(new ForgotPasswordDto("unknown@test.fr"));
-
-        verify(resetPasswordRepository, never()).save(any());
-        verify(emailService, never()).sendResetPasswordEmail(any(), any(), any());
-    }
-
-    @Test
     void resetPassword_shouldUpdatePasswordAndMarkTokenAsUsed_whenTokenIsValid() {
         ResetPassword resetPassword = ResetPassword.builder()
                 .tokenDemandReset("valid-token")

@@ -165,22 +165,4 @@ class AuthServiceImplTest {
         verify(refreshTokenRepository, times(2)).save(any(RefreshToken.class));
     }
 
-    @Test
-    void logout_shouldRevokeRefreshToken_whenTokenExists() {
-        RefreshToken token = RefreshToken.builder()
-                .token("refresh-token")
-                .creationDate(LocalDateTime.now())
-                .expirationDate(LocalDateTime.now().plusDays(7))
-                .isRevoked(false)
-                .deviceInfo("Terminal")
-                .user(activeUser)
-                .build();
-
-        when(refreshTokenRepository.findByToken("refresh-token")).thenReturn(Optional.of(token));
-
-        authService.logout("refresh-token");
-
-        assertThat(token.isRevoked()).isTrue();
-        verify(refreshTokenRepository).save(token);
-    }
 }

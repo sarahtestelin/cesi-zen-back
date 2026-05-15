@@ -92,4 +92,22 @@ public class AppUserController {
     ) {
         return appUserService.enableUser(id, jwt.getSubject());
     }
+
+    @PatchMapping("/{id}/promote")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AppUserDto promoteUser(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return appUserService.promoteUser(id, jwt.getSubject());
+    }
+
+    @PatchMapping("/{id}/demote")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AppUserDto demoteUser(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return appUserService.demoteUser(id, jwt.getSubject());
+    }
 }

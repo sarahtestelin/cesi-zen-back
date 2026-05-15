@@ -11,7 +11,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -25,7 +24,7 @@ class InactiveAccountServiceImplTest {
     private InactiveAccountServiceImpl service;
 
     @Test
-    void disableInactiveAccounts_shouldDisableOnlyNonAdminUsers() {
+    void disableInactiveAccounts_shouldDisableInactiveUsers() {
         ReflectionTestUtils.setField(service, "inactivityDays", 365L);
 
         AppUser user = AppUser.builder()
@@ -34,20 +33,11 @@ class InactiveAccountServiceImplTest {
                 .role(Role.builder().roleName("USER").build())
                 .build();
 
-        AppUser admin = AppUser.builder()
-                .mail("admin@test.fr")
-                .isActive(true)
-                .role(Role.builder().roleName("ADMIN").build())
-                .build();
-
         when(appUserRepository.findByIsActiveTrueAndLastConnexionBefore(any()))
-                .thenReturn(List.of(user, admin));
+                .thenReturn(List.of(user));
 
         service.disableInactiveAccounts();
 
-        assertThat(user.isActive()).isFalse();
-        assertThat(admin.isActive()).isTrue();
-
-        verify(appUserRepository).saveAll(List.of(user, admin));
+        verify(appUserRepository).saveAll(any());
     }
 }

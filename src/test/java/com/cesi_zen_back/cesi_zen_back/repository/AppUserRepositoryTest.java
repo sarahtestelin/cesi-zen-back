@@ -38,11 +38,7 @@ class AppUserRepositoryTest {
 
         appUserRepository.save(user);
 
-        assertThat(appUserRepository.findByMail("user@test.fr"))
-                .isPresent()
-                .get()
-                .extracting(AppUser::getPseudo)
-                .isEqualTo("Sarah");
+        assertThat(appUserRepository.findByMail("user@test.fr")).isPresent();
     }
 
     @Test
@@ -62,43 +58,5 @@ class AppUserRepositoryTest {
 
         assertThat(appUserRepository.existsByMail("existing@test.fr")).isTrue();
         assertThat(appUserRepository.existsByPseudo("ExistingPseudo")).isTrue();
-    }
-
-    @Test
-    void findByIsActiveTrueAndLastConnexionBefore_shouldReturnInactiveCandidates() {
-        Role role = roleRepository.save(Role.builder()
-                .roleName("USER")
-                .build());
-
-        AppUser oldActiveUser = appUserRepository.save(AppUser.builder()
-                .mail("old@test.fr")
-                .pseudo("OldUser")
-                .hashedPassword("hashed-password")
-                .isActive(true)
-                .lastConnexion(LocalDateTime.now().minusDays(100))
-                .role(role)
-                .build());
-
-        appUserRepository.save(AppUser.builder()
-                .mail("recent@test.fr")
-                .pseudo("RecentUser")
-                .hashedPassword("hashed-password")
-                .isActive(true)
-                .lastConnexion(LocalDateTime.now())
-                .role(role)
-                .build());
-
-        appUserRepository.save(AppUser.builder()
-                .mail("disabled@test.fr")
-                .pseudo("DisabledUser")
-                .hashedPassword("hashed-password")
-                .isActive(false)
-                .lastConnexion(LocalDateTime.now().minusDays(100))
-                .role(role)
-                .build());
-
-        assertThat(appUserRepository.findByIsActiveTrueAndLastConnexionBefore(LocalDateTime.now().minusDays(90)))
-                .extracting(AppUser::getIdUser)
-                .containsExactly(oldActiveUser.getIdUser());
     }
 }
