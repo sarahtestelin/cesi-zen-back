@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -103,6 +104,7 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain publicFilterChain(
             HttpSecurity http,
+            RateLimitFilter rateLimitFilter,
             CookieCsrfTokenRepository csrfTokenRepository,
             CsrfTokenRequestAttributeHandler csrfTokenRequestHandler
     ) throws Exception {
@@ -127,6 +129,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .addFilterBefore(rateLimitFilter, CsrfFilter.class)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
         return http.build();
