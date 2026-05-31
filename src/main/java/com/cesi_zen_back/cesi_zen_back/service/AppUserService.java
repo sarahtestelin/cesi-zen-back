@@ -28,4 +28,8 @@ public interface AppUserService {
     AppUserDto disableUser(UUID id, String adminMail);
 
     AppUserDto enableUser(UUID id, String adminMail);
+
+    AppUserDto promoteUser(UUID id, String adminMail);
+
+    AppUserDto demoteUser(UUID id, String adminMail);
 }

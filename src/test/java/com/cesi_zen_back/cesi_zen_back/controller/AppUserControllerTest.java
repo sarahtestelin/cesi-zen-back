@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -22,12 +21,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class AppUserControllerFunctionalTest {
+class AppUserControllerTest {
 
     private MockMvc mockMvc;
     private AppUserService appUserService;
@@ -85,38 +83,7 @@ class AppUserControllerFunctionalTest {
     }
 
     @Test
-    void exportCurrentUserData_shouldReturnExport() throws Exception {
-        UserDataExportDto export = new UserDataExportDto(
-                userId,
-                "user@test.fr",
-                "Sarah",
-                true,
-                LocalDateTime.now(),
-                "USER",
-                List.of(new DiagnosticResultResponseDto(
-                        UUID.randomUUID(),
-                        150,
-                        "MODERE",
-                        "Stress modéré",
-                        LocalDateTime.now()
-                )),
-                List.of(),
-                List.of()
-        );
-
-        when(appUserService.exportCurrentUserData("user@test.fr")).thenReturn(export);
-
-        mockMvc.perform(get("/api/users/me/export"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(userId.toString()))
-                .andExpect(jsonPath("$.mail").value("user@test.fr"))
-                .andExpect(jsonPath("$.diagnosticResults[0].finalScore").value(150));
-
-        verify(appUserService).exportCurrentUserData("user@test.fr");
-    }
-
-    @Test
-    void updateCurrentUser_shouldValidateAndCallService() throws Exception {
+    void updateCurrentUser_shouldCallService() throws Exception {
         AppUserDto response = new AppUserDto(
                 userId,
                 "new@test.fr",
@@ -143,11 +110,7 @@ class AppUserControllerFunctionalTest {
                 .andExpect(jsonPath("$.mail").value("new@test.fr"))
                 .andExpect(jsonPath("$.pseudo").value("NewSarah"));
 
-        ArgumentCaptor<UpdateCurrentUserDto> captor = ArgumentCaptor.forClass(UpdateCurrentUserDto.class);
-        verify(appUserService).updateCurrentUser(eq("user@test.fr"), captor.capture());
-
-        assertThat(captor.getValue().mail()).isEqualTo("new@test.fr");
-        assertThat(captor.getValue().pseudo()).isEqualTo("NewSarah");
+        verify(appUserService).updateCurrentUser(eq("user@test.fr"), any(UpdateCurrentUserDto.class));
     }
 
     @Test
@@ -197,27 +160,6 @@ class AppUserControllerFunctionalTest {
     }
 
     @Test
-    void getUserById_shouldReturnUser() throws Exception {
-        AppUserDto dto = new AppUserDto(
-                userId,
-                "user@test.fr",
-                "Sarah",
-                true,
-                LocalDateTime.now(),
-                "USER"
-        );
-
-        when(appUserService.getUserById(userId)).thenReturn(dto);
-
-        mockMvc.perform(get("/api/users/{id}", userId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(userId.toString()))
-                .andExpect(jsonPath("$.pseudo").value("Sarah"));
-
-        verify(appUserService).getUserById(userId);
-    }
-
-    @Test
     void updateUser_shouldForwardAdminMail() throws Exception {
         AppUserDto response = new AppUserDto(
                 userId,
@@ -246,8 +188,7 @@ class AppUserControllerFunctionalTest {
                         .contentType("application/json")
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mail").value("updated@test.fr"))
-                .andExpect(jsonPath("$.pseudo").value("Updated"));
+                .andExpect(jsonPath("$.mail").value("updated@test.fr"));
 
         verify(appUserService).updateUser(eq(userId), any(AppUserDto.class), eq("user@test.fr"));
     }

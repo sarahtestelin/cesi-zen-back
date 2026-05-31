@@ -7,7 +7,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CsrfControllerFunctionalTest {
+class CsrfControllerTest {
 
     @Test
     void csrf_shouldReturnCsrfToken() {

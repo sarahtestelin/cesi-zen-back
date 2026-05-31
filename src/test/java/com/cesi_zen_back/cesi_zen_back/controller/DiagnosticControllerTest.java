@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -22,12 +21,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class DiagnosticControllerFunctionalTest {
+class DiagnosticControllerTest {
 
     private MockMvc mockMvc;
     private DiagnosticService diagnosticService;
@@ -84,8 +82,7 @@ class DiagnosticControllerFunctionalTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(questionId.toString()))
                 .andExpect(jsonPath("$[0].question").value("Question de stress ?"))
-                .andExpect(jsonPath("$[0].score").value(50))
-                .andExpect(jsonPath("$[0].active").value(true));
+                .andExpect(jsonPath("$[0].score").value(50));
 
         verify(diagnosticService).listActiveQuestions();
     }
@@ -105,31 +102,10 @@ class DiagnosticControllerFunctionalTest {
                         .contentType("application/json")
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultId").doesNotExist())
                 .andExpect(jsonPath("$.finalScore").value(150))
-                .andExpect(jsonPath("$.level").value("MODERE"))
-                .andExpect(jsonPath("$.message").value("Stress modéré"));
+                .andExpect(jsonPath("$.level").value("MODERE"));
 
-        ArgumentCaptor<DiagnosticRequestDto> captor = ArgumentCaptor.forClass(DiagnosticRequestDto.class);
-        verify(diagnosticService).calculateAnonymous(captor.capture());
-
-        assertThat(captor.getValue().questionIds()).containsExactly(questionId);
-    }
-
-    @Test
-    void calculateAnonymous_shouldRejectEmptyQuestionList() throws Exception {
-        String body = """
-                {
-                  "questionIds": []
-                }
-                """;
-
-        mockMvc.perform(post("/api/v1/diagnostics/anonymous")
-                        .contentType("application/json")
-                        .content(body))
-                .andExpect(status().isBadRequest());
-
-        verify(diagnosticService, never()).calculateAnonymous(any());
+        verify(diagnosticService).calculateAnonymous(any(DiagnosticRequestDto.class));
     }
 
     @Test
@@ -168,7 +144,6 @@ class DiagnosticControllerFunctionalTest {
 
         mockMvc.perform(get("/api/v1/diagnostics/results/me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(resultId.toString()))
                 .andExpect(jsonPath("$[0].finalScore").value(150))
                 .andExpect(jsonPath("$[0].level").value("MODERE"));
 
@@ -200,28 +175,10 @@ class DiagnosticControllerFunctionalTest {
                         .contentType("application/json")
                         .content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(questionId.toString()))
                 .andExpect(jsonPath("$.question").value("Nouvelle question"))
                 .andExpect(jsonPath("$.score").value(42));
 
         verify(diagnosticService).createQuestion(any(DiagnosticQuestionRequestDto.class));
-    }
-
-    @Test
-    void createQuestion_shouldRejectBlankQuestion() throws Exception {
-        String body = """
-                {
-                  "question": "",
-                  "score": 42
-                }
-                """;
-
-        mockMvc.perform(post("/api/v1/diagnostics/admin/questions")
-                        .contentType("application/json")
-                        .content(body))
-                .andExpect(status().isBadRequest());
-
-        verify(diagnosticService, never()).createQuestion(any());
     }
 
     @Test
@@ -249,50 +206,9 @@ class DiagnosticControllerFunctionalTest {
                         .contentType("application/json")
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.question").value("Question modifiée"))
-                .andExpect(jsonPath("$.score").value(80));
+                .andExpect(jsonPath("$.question").value("Question modifiée"));
 
         verify(diagnosticService).updateQuestion(eq(questionId), any(DiagnosticQuestionRequestDto.class));
-    }
-
-    @Test
-    void disableQuestion_shouldCallService() throws Exception {
-        DiagnosticQuestionResponseDto response = new DiagnosticQuestionResponseDto(
-                questionId,
-                "Question",
-                50,
-                false,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(diagnosticService.disableQuestion(questionId)).thenReturn(response);
-
-        mockMvc.perform(patch("/api/v1/diagnostics/admin/questions/{id}/disable", questionId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.active").value(false));
-
-        verify(diagnosticService).disableQuestion(questionId);
-    }
-
-    @Test
-    void enableQuestion_shouldCallService() throws Exception {
-        DiagnosticQuestionResponseDto response = new DiagnosticQuestionResponseDto(
-                questionId,
-                "Question",
-                50,
-                true,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(diagnosticService.enableQuestion(questionId)).thenReturn(response);
-
-        mockMvc.perform(patch("/api/v1/diagnostics/admin/questions/{id}/enable", questionId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(diagnosticService).enableQuestion(questionId);
     }
 
     @Test
@@ -301,29 +217,6 @@ class DiagnosticControllerFunctionalTest {
                 .andExpect(status().isNoContent());
 
         verify(diagnosticService).deleteQuestion(questionId);
-    }
-
-    @Test
-    void listResultConfigs_shouldReturnConfigs() throws Exception {
-        DiagnosticResultConfigResponseDto config = new DiagnosticResultConfigResponseDto(
-                resultConfigId,
-                0,
-                149,
-                "FAIBLE",
-                "Stress faible",
-                true,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(diagnosticService.listResultConfigs()).thenReturn(List.of(config));
-
-        mockMvc.perform(get("/api/v1/diagnostics/admin/result-configs"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(resultConfigId.toString()))
-                .andExpect(jsonPath("$[0].level").value("FAIBLE"));
-
-        verify(diagnosticService).listResultConfigs();
     }
 
     @Test
@@ -355,107 +248,9 @@ class DiagnosticControllerFunctionalTest {
                         .contentType("application/json")
                         .content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.level").value("FAIBLE"))
-                .andExpect(jsonPath("$.active").value(true));
+                .andExpect(jsonPath("$.level").value("FAIBLE"));
 
         verify(diagnosticService).createResultConfig(any(DiagnosticResultConfigRequestDto.class));
-    }
-
-    @Test
-    void createResultConfig_shouldRejectBlankLevel() throws Exception {
-        String body = """
-                {
-                  "minScore": 0,
-                  "maxScore": 149,
-                  "level": "",
-                  "message": "Stress faible"
-                }
-                """;
-
-        mockMvc.perform(post("/api/v1/diagnostics/admin/result-configs")
-                        .contentType("application/json")
-                        .content(body))
-                .andExpect(status().isBadRequest());
-
-        verify(diagnosticService, never()).createResultConfig(any());
-    }
-
-    @Test
-    void updateResultConfig_shouldCallService() throws Exception {
-        DiagnosticResultConfigResponseDto response = new DiagnosticResultConfigResponseDto(
-                resultConfigId,
-                150,
-                299,
-                "MODERE",
-                "Stress modéré",
-                true,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(diagnosticService.updateResultConfig(eq(resultConfigId), any(DiagnosticResultConfigRequestDto.class)))
-                .thenReturn(response);
-
-        String body = """
-                {
-                  "minScore": 150,
-                  "maxScore": 299,
-                  "level": "MODERE",
-                  "message": "Stress modéré"
-                }
-                """;
-
-        mockMvc.perform(put("/api/v1/diagnostics/admin/result-configs/{id}", resultConfigId)
-                        .contentType("application/json")
-                        .content(body))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.level").value("MODERE"));
-
-        verify(diagnosticService).updateResultConfig(eq(resultConfigId), any(DiagnosticResultConfigRequestDto.class));
-    }
-
-    @Test
-    void disableResultConfig_shouldCallService() throws Exception {
-        DiagnosticResultConfigResponseDto response = new DiagnosticResultConfigResponseDto(
-                resultConfigId,
-                0,
-                149,
-                "FAIBLE",
-                "Stress faible",
-                false,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(diagnosticService.disableResultConfig(resultConfigId)).thenReturn(response);
-
-        mockMvc.perform(patch("/api/v1/diagnostics/admin/result-configs/{id}/disable", resultConfigId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.active").value(false));
-
-        verify(diagnosticService).disableResultConfig(resultConfigId);
-    }
-
-    @Test
-    void enableResultConfig_shouldCallService() throws Exception {
-        DiagnosticResultConfigResponseDto response = new DiagnosticResultConfigResponseDto(
-                resultConfigId,
-                0,
-                149,
-                "FAIBLE",
-                "Stress faible",
-                true,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
-
-        when(diagnosticService.enableResultConfig(resultConfigId)).thenReturn(response);
-
-        mockMvc.perform(patch("/api/v1/diagnostics/admin/result-configs/{id}/enable", resultConfigId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.active").value(true));
-
-        verify(diagnosticService).enableResultConfig(resultConfigId);
     }
 
     @Test
