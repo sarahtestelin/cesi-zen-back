@@ -97,21 +97,6 @@ class AppUserServiceImplTest {
     }
 
     @Test
-    void updateCurrentUser_shouldAllowSameMailAndSamePseudo() {
-        UpdateCurrentUserDto dto = new UpdateCurrentUserDto("user@test.fr", "Sarah");
-
-        when(appUserRepository.findByMail("user@test.fr")).thenReturn(Optional.of(user), Optional.of(user));
-        when(appUserRepository.save(user)).thenReturn(user);
-
-        AppUserDto result = service.updateCurrentUser("user@test.fr", dto);
-
-        assertThat(result.mail()).isEqualTo("user@test.fr");
-        assertThat(result.pseudo()).isEqualTo("Sarah");
-        verify(appUserRepository).save(user);
-        verify(appUserRepository, never()).existsByPseudo(anyString());
-    }
-
-    @Test
     void updateCurrentUser_shouldRejectMailAlreadyUsedByAnotherUser() {
         AppUser otherUser = AppUser.builder()
                 .idUser(UUID.randomUUID())

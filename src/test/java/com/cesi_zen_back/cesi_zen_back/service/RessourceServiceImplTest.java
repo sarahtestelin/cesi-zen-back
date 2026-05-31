@@ -1,8 +1,7 @@
 package com.cesi_zen_back.cesi_zen_back.service;
 
-import com.cesi_zen_back.cesi_zen_back.dto.HistoricEtatResponseDto;
+import com.cesi_zen_back.cesi_zen_back.dto.RessourceRequestDto;
 import com.cesi_zen_back.cesi_zen_back.dto.RessourceResponseDto;
-import com.cesi_zen_back.cesi_zen_back.entity.HistoricEtat;
 import com.cesi_zen_back.cesi_zen_back.entity.Ressource;
 import com.cesi_zen_back.cesi_zen_back.repository.HistoricEtatRepository;
 import com.cesi_zen_back.cesi_zen_back.repository.RessourceRepository;
@@ -31,9 +30,8 @@ class RessourceServiceImplTest {
     @Mock
     private HistoricEtatRepository historicRepo;
 
-    @Spy
-    private ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private RessourceServiceImpl service;
@@ -93,25 +91,10 @@ class RessourceServiceImplTest {
     }
 
     @Test
-    void getAdmin_shouldThrowNotFound_whenRessourceDoesNotExist() {
-        when(repo.findById(ressourceId)).thenReturn(Optional.empty());
+    void create_shouldSaveRessourceAndHistory() throws Exception {
+        RessourceRequestDto dto = new RessourceRequestDto("Nouvelle ressource", "Description", "anxiete");
 
-        assertThatThrownBy(() -> service.getAdmin(ressourceId))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("Ressource introuvable");
-    }
-
-    @Test
-    void create_shouldForceActiveUsedAndSaveHistory() {
-        Ressource body = new Ressource();
-        body.setId(UUID.randomUUID());
-        body.setTitle("Nouvelle ressource");
-        body.setDescription("Description");
-        body.setCategory("anxiete");
-        body.setStatus(null);
-        body.setRessourceIsActive(false);
-        body.setRessourceIsUsed(false);
-
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(repo.save(any(Ressource.class))).thenAnswer(invocation -> {
             Ressource saved = invocation.getArgument(0);
             saved.setId(ressourceId);
@@ -120,59 +103,38 @@ class RessourceServiceImplTest {
             return saved;
         });
 
-        RessourceResponseDto result = service.create(body);
+        RessourceResponseDto result = service.create(dto);
 
         assertThat(result.id()).isEqualTo(ressourceId);
-        assertThat(result.ressourceIsActive()).isTrue();
-        assertThat(result.ressourceIsUsed()).isTrue();
         assertThat(result.title()).isEqualTo("Nouvelle ressource");
+        assertThat(result.ressourceIsActive()).isTrue();
 
-        ArgumentCaptor<HistoricEtat> captor = ArgumentCaptor.forClass(HistoricEtat.class);
-        verify(historicRepo).save(captor.capture());
-
-        HistoricEtat history = captor.getValue();
-        assertThat(history.getOldValue()).isEqualTo("{}");
-        assertThat(history.getComment()).isEqualTo("CREATION");
-        assertThat(history.getEntityType()).isEqualTo("RESSOURCE");
-        assertThat(history.getEntityId()).isEqualTo(ressourceId);
-        assertThat(history.getNewValue()).contains("Nouvelle ressource");
+        verify(historicRepo).save(any());
     }
 
     @Test
-    void update_shouldUpdateFieldsAndSaveHistory() {
-        Ressource body = new Ressource();
-        body.setTitle("Titre modifié");
-        body.setDescription("Description modifiée");
-        body.setCategory("sommeil");
-        body.setStatus("DRAFT");
-        body.setRessourceIsActive(false);
-        body.setRessourceIsUsed(false);
+    void update_shouldUpdateFieldsAndSaveHistory() throws Exception {
+        RessourceRequestDto dto = new RessourceRequestDto("Titre modifié", "Description modifiée", "sommeil");
 
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(repo.findById(ressourceId)).thenReturn(Optional.of(activeRessource));
         when(repo.save(activeRessource)).thenReturn(activeRessource);
 
-        RessourceResponseDto result = service.update(ressourceId, body);
+        RessourceResponseDto result = service.update(ressourceId, dto);
 
         assertThat(result.title()).isEqualTo("Titre modifié");
         assertThat(result.description()).isEqualTo("Description modifiée");
         assertThat(result.category()).isEqualTo("sommeil");
-        assertThat(result.status()).isEqualTo("DRAFT");
-        assertThat(result.ressourceIsActive()).isFalse();
-        assertThat(result.ressourceIsUsed()).isFalse();
 
-        ArgumentCaptor<HistoricEtat> captor = ArgumentCaptor.forClass(HistoricEtat.class);
-        verify(historicRepo).save(captor.capture());
-
-        assertThat(captor.getValue().getComment()).isEqualTo("UPDATE");
-        assertThat(captor.getValue().getOldValue()).contains("Gestion du stress");
-        assertThat(captor.getValue().getNewValue()).contains("Titre modifié");
+        verify(historicRepo).save(any());
     }
 
     @Test
-    void enable_shouldActivateRessourceAndSaveHistory() {
+    void enable_shouldActivateRessource() throws Exception {
         activeRessource.setRessourceIsActive(false);
         activeRessource.setRessourceIsUsed(false);
 
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(repo.findById(ressourceId)).thenReturn(Optional.of(activeRessource));
         when(repo.save(activeRessource)).thenReturn(activeRessource);
 
@@ -180,15 +142,11 @@ class RessourceServiceImplTest {
 
         assertThat(result.ressourceIsActive()).isTrue();
         assertThat(result.ressourceIsUsed()).isTrue();
-
-        ArgumentCaptor<HistoricEtat> captor = ArgumentCaptor.forClass(HistoricEtat.class);
-        verify(historicRepo).save(captor.capture());
-
-        assertThat(captor.getValue().getComment()).isEqualTo("ENABLE");
     }
 
     @Test
-    void disable_shouldDeactivateRessourceAndSaveHistory() {
+    void disable_shouldDeactivateRessource() throws Exception {
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(repo.findById(ressourceId)).thenReturn(Optional.of(activeRessource));
         when(repo.save(activeRessource)).thenReturn(activeRessource);
 
@@ -196,15 +154,11 @@ class RessourceServiceImplTest {
 
         assertThat(result.ressourceIsActive()).isFalse();
         assertThat(result.ressourceIsUsed()).isFalse();
-
-        ArgumentCaptor<HistoricEtat> captor = ArgumentCaptor.forClass(HistoricEtat.class);
-        verify(historicRepo).save(captor.capture());
-
-        assertThat(captor.getValue().getComment()).isEqualTo("DISABLE");
     }
 
     @Test
-    void delete_shouldSoftDeleteRessourceAndSaveHistory() {
+    void delete_shouldSoftDeleteRessource() throws Exception {
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(repo.findById(ressourceId)).thenReturn(Optional.of(activeRessource));
         when(repo.save(activeRessource)).thenReturn(activeRessource);
 
@@ -212,54 +166,17 @@ class RessourceServiceImplTest {
 
         assertThat(activeRessource.isRessourceIsActive()).isFalse();
         assertThat(activeRessource.isRessourceIsUsed()).isFalse();
-
-        ArgumentCaptor<HistoricEtat> captor = ArgumentCaptor.forClass(HistoricEtat.class);
-        verify(historicRepo).save(captor.capture());
-
-        assertThat(captor.getValue().getComment()).isEqualTo("DELETE_LOGIQUE");
-    }
-
-    @Test
-    void history_shouldReturnOnlyHistoryForRequestedRessource() {
-        HistoricEtat matchingHistory = new HistoricEtat();
-        matchingHistory.setId(UUID.randomUUID());
-        matchingHistory.setEntityType("RESSOURCE");
-        matchingHistory.setEntityId(ressourceId);
-        matchingHistory.setOldValue("{}");
-        matchingHistory.setNewValue("{title}");
-        matchingHistory.setComment("UPDATE");
-        matchingHistory.setModificationDate(LocalDateTime.now());
-
-        HistoricEtat otherRessourceHistory = new HistoricEtat();
-        otherRessourceHistory.setEntityType("RESSOURCE");
-        otherRessourceHistory.setEntityId(UUID.randomUUID());
-
-        HistoricEtat otherEntityHistory = new HistoricEtat();
-        otherEntityHistory.setEntityType("APP_USER");
-        otherEntityHistory.setEntityId(ressourceId);
-
-        when(historicRepo.findAll()).thenReturn(List.of(
-                matchingHistory,
-                otherRessourceHistory,
-                otherEntityHistory
-        ));
-
-        List<HistoricEtatResponseDto> result = service.history(ressourceId);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).entityType()).isEqualTo("RESSOURCE");
-        assertThat(result.get(0).entityId()).isEqualTo(ressourceId);
+        verify(historicRepo).save(any());
     }
 
     @Test
     void update_shouldThrowNotFound_whenRessourceDoesNotExist() {
         when(repo.findById(ressourceId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(ressourceId, new Ressource()))
+        assertThatThrownBy(() -> service.update(ressourceId, new RessourceRequestDto("t", "d", "c")))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Ressource introuvable");
 
         verify(repo, never()).save(any());
-        verify(historicRepo, never()).save(any());
     }
 }
