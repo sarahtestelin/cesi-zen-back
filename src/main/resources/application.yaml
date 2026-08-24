@@ -3,25 +3,25 @@ spring:
     name: cesi-zen-back
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/cesizenDb
-    username: cesizenUser
-    password: password
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cesizenDb}
+    username: ${DB_USERNAME:cesizenUser}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: ${SHOW_SQL:false}
 
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
   mail:
-    host: localhost
-    port: 1025
-    username:
-    password:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -32,21 +32,21 @@ spring:
 server:
   port: 8080
   ssl:
-    enabled: true
-    key-store: classpath:certs/cesizen-local.p12
-    key-store-password: password
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEY_STORE:classpath:certs/cesizen-local.p12}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-store-type: PKCS12
     key-alias: cesizen-local
 
 security:
   jwt:
-    secret: long-random-secret-for-cesizen-project
+    secret: ${JWT_SECRET}
     issuer: cesi-zen-back
     access-token-validity-minutes: 15
 
 app:
   frontend:
-    reset-password-url: http://localhost:4200/reset-password
+    reset-password-url: ${RESET_PASSWORD_URL:http://localhost:4200/reset-password}
 
   account:
     inactivity-days: 90
@@ -57,7 +57,7 @@ app:
 
   security:
     allowed-origins:
-      - https://localhost:4200
-      - http://localhost:4200
-      - https://localhost:8443
-      - http://localhost:8080
+    - https://localhost:4200
+    - http://localhost:4200
+    - https://localhost:8443
+    - http://localhost:8080
