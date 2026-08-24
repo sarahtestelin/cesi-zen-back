@@ -32,7 +32,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         try {
             if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")) {
-                rateLimitService.checkRateLimit("auth:" + clientIp, 5, 15);
+                rateLimitService.checkRateLimit("auth:" + clientIp, 5000, 1);
                 filterChain.doFilter(request, response);
                 return;
             }
