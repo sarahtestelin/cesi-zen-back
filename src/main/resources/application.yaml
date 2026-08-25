@@ -12,6 +12,7 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: ${SHOW_SQL:false}
+    open-in-view: false
 
   liquibase:
     enabled: true
