@@ -9,16 +9,10 @@ pipeline {
             }
         }
 
-        stage('Tests') {
+        stage('Build & Tests') {
             steps {
                 sh 'chmod +x mvnw'
-                sh './mvnw clean test'
-            }
-        }
-
-        stage('Quality & Package') {
-            steps {
-                sh './mvnw verify -DskipTests'
+                sh './mvnw clean verify'
             }
         }
     }
