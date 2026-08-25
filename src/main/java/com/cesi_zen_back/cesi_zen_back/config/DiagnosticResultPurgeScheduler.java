@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class DiagnosticResultPurgeScheduler {
 
-    private final DiagnosticResultPurgeService diagnosticResultPurgeService;
+  private final DiagnosticResultPurgeService diagnosticResultPurgeService;
 
-    @Scheduled(cron = "${app.diagnostic.purge-cron:0 30 2 * * *}")
-    public void purgeOldDiagnosticResultsEveryNight() {
-        long deletedCount = diagnosticResultPurgeService.purgeOldDiagnosticResults();
-        System.out.println("Purge diagnostic exécutée - résultats supprimés : " + deletedCount);
-    }
+  @Scheduled(cron = "${app.diagnostic.purge-cron:0 30 2 * * *}")
+  public void purgeOldDiagnosticResultsEveryNight() {
+    long deletedCount = diagnosticResultPurgeService.purgeOldDiagnosticResults();
+    System.out.println("Purge diagnostic exécutée - résultats supprimés : " + deletedCount);
+  }
 }

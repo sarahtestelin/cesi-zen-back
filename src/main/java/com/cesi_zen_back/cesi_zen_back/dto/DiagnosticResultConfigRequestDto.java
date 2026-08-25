@@ -4,8 +4,4 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 public record DiagnosticResultConfigRequestDto(
-        @Min(0) int minScore,
-        @Min(0) int maxScore,
-        @NotBlank String level,
-        @NotBlank String message
-) {}
+    @Min(0) int minScore, @Min(0) int maxScore, @NotBlank String level, @NotBlank String message) {}

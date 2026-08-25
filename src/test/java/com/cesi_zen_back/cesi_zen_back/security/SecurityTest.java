@@ -1,5 +1,11 @@
 package com.cesi_zen_back.cesi_zen_back.security;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.cesi_zen_back.cesi_zen_back.repository.RefreshTokenRepository;
 import com.cesi_zen_back.cesi_zen_back.service.RateLimitService;
 import org.junit.jupiter.api.Test;
@@ -10,35 +16,26 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class SecurityTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private RateLimitService rateLimitService;
+  @MockBean private RateLimitService rateLimitService;
 
-    @MockBean
-    private RefreshTokenRepository refreshTokenRepository;
+  @MockBean private RefreshTokenRepository refreshTokenRepository;
 
-    @Test
-    void protectedUsersEndpoint_shouldRejectAnonymousUser() throws Exception {
-        mockMvc.perform(get("/api/users"))
-                .andExpect(status().isUnauthorized());
-    }
+  @Test
+  void protectedUsersEndpoint_shouldRejectAnonymousUser() throws Exception {
+    mockMvc.perform(get("/api/users")).andExpect(status().isUnauthorized());
+  }
 
-    @Test
-    void publicRegisterEndpoint_shouldStayAccessibleWithoutAuthentication() throws Exception {
-        String invalidBody = """
+  @Test
+  void publicRegisterEndpoint_shouldStayAccessibleWithoutAuthentication() throws Exception {
+    String invalidBody =
+        """
                 {
                   "mail": "not-an-email",
                   "pseudo": "Sa",
@@ -47,22 +44,22 @@ class SecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/auth/register")
-                        .with(csrf())
-                        .contentType(APPLICATION_JSON)
-                        .content(invalidBody))
-                .andExpect(status().isBadRequest());
-    }
+    mockMvc
+        .perform(
+            post("/api/auth/register")
+                .with(csrf())
+                .contentType(APPLICATION_JSON)
+                .content(invalidBody))
+        .andExpect(status().isBadRequest());
+  }
 
-    @Test
-    void publicRessourcesEndpoint_shouldStayAccessibleWithoutAuthentication() throws Exception {
-        mockMvc.perform(get("/api/v1/ressources"))
-                .andExpect(status().isOk());
-    }
+  @Test
+  void publicRessourcesEndpoint_shouldStayAccessibleWithoutAuthentication() throws Exception {
+    mockMvc.perform(get("/api/v1/ressources")).andExpect(status().isOk());
+  }
 
-    @Test
-    void swaggerEndpoint_shouldStayPublic() throws Exception {
-        mockMvc.perform(get("/v3/api-docs"))
-                .andExpect(status().isOk());
-    }
+  @Test
+  void swaggerEndpoint_shouldStayPublic() throws Exception {
+    mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+  }
 }

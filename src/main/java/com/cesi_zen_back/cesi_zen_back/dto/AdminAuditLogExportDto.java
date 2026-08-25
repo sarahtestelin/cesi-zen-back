@@ -4,11 +4,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record AdminAuditLogExportDto(
-        UUID id,
-        String action,
-        String targetType,
-        String targetId,
-        String details,
-        LocalDateTime createdAt
-) {
-}
+    UUID id,
+    String action,
+    String targetType,
+    String targetId,
+    String details,
+    LocalDateTime createdAt) {}

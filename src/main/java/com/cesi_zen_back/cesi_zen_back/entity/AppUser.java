@@ -1,10 +1,9 @@
 package com.cesi_zen_back.cesi_zen_back.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "app_user")
@@ -15,27 +14,27 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AppUser {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "app_user_id")
-    private UUID idUser;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "app_user_id")
+  private UUID idUser;
 
-    @Column(name = "mail", nullable = false, unique = true, length = 150)
-    private String mail;
+  @Column(name = "mail", nullable = false, unique = true, length = 150)
+  private String mail;
 
-    @Column(name = "pseudo", nullable = false, unique = true, length = 150)
-    private String pseudo;
+  @Column(name = "pseudo", nullable = false, unique = true, length = 150)
+  private String pseudo;
 
-    @Column(name = "app_user_is_active", nullable = false)
-    private boolean isActive;
+  @Column(name = "app_user_is_active", nullable = false)
+  private boolean isActive;
 
-    @Column(name = "hashed_password", nullable = false, length = 250)
-    private String hashedPassword;
+  @Column(name = "hashed_password", nullable = false, length = 250)
+  private String hashedPassword;
 
-    @Column(name = "last_connection_at")
-    private LocalDateTime lastConnexion;
+  @Column(name = "last_connection_at")
+  private LocalDateTime lastConnexion;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role role;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "role_id", nullable = false)
+  private Role role;
 }

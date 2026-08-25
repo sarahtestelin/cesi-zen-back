@@ -4,9 +4,4 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record DiagnosticResultResponseDto(
-        UUID id,
-        int finalScore,
-        String level,
-        String message,
-        LocalDateTime createdAt
-) {}
+    UUID id, int finalScore, String level, String message, LocalDateTime createdAt) {}

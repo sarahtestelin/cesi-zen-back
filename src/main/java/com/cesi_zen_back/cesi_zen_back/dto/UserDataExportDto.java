@@ -5,14 +5,12 @@ import java.util.List;
 import java.util.UUID;
 
 public record UserDataExportDto(
-        UUID id,
-        String mail,
-        String pseudo,
-        boolean active,
-        LocalDateTime lastConnectionAt,
-        String role,
-        List<DiagnosticResultResponseDto> diagnosticResults,
-        List<HistoricEtatResponseDto> histories,
-        List<AdminAuditLogExportDto> auditLogs
-) {
-}
+    UUID id,
+    String mail,
+    String pseudo,
+    boolean active,
+    LocalDateTime lastConnectionAt,
+    String role,
+    List<DiagnosticResultResponseDto> diagnosticResults,
+    List<HistoricEtatResponseDto> histories,
+    List<AdminAuditLogExportDto> auditLogs) {}
