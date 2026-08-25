@@ -61,3 +61,13 @@ app:
     - http://localhost:4200
     - https://localhost:8443
     - http://localhost:8080
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health
+
+    endpoint:
+      health:
+        show-details: never
