@@ -3,12 +3,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build & Tests') {
             steps {
                 sh 'chmod +x mvnw'
@@ -18,6 +12,15 @@ pipeline {
     }
 
     post {
+        always {
+            junit allowEmptyResults: true,
+                  testResults: 'target/surefire-reports/*.xml'
+
+            archiveArtifacts allowEmptyArchive: true,
+                             artifacts: 'target/*.jar',
+                             fingerprint: true
+        }
+
         success {
             echo 'Pipeline CESIZen Back réussi.'
         }
