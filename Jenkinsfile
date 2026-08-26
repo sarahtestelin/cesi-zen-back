@@ -8,12 +8,6 @@ pipeline {
 
     stages {
 
-        stage('Test Jira automation') {
-            steps {
-                error('Échec volontaire pour tester la création automatique du ticket Jira')
-            }
-        }
-
         stage('Build & Tests') {
             steps {
                 sh 'chmod +x mvnw'
