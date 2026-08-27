@@ -46,12 +46,14 @@ public class AppUserServiceImpl implements AppUserService {
   private final AdminAuditService adminAuditService;
 
   @Override
+  @Transactional(readOnly = true)
   public AppUserDto getCurrentUser(String mail) {
     AppUser user = findUserByMail(mail);
     return UserMapper.toDto(user);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public UserDataExportDto exportCurrentUserData(String mail) {
     AppUser user = findUserByMail(mail);
     UUID userId = user.getIdUser();
@@ -112,11 +114,13 @@ public class AppUserServiceImpl implements AppUserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<AppUserDto> getAllUsers() {
     return appUserRepository.findAll().stream().map(UserMapper::toDto).toList();
   }
 
   @Override
+  @Transactional(readOnly = true)
   public AppUserDto getUserById(UUID id) {
     AppUser user = findUserById(id);
     return UserMapper.toDto(user);
@@ -204,9 +208,11 @@ public class AppUserServiceImpl implements AppUserService {
   @Transactional
   public AppUserDto demoteUser(UUID id, String adminMail) {
     AppUser admin = findUserByMail(adminMail);
+
     if (admin.getIdUser().equals(id)) {
       throw new BadRequestException("Vous ne pouvez pas retirer votre propre rôle administrateur.");
     }
+
     return changeUserRole(
         id, adminMail, "USER", "DEMOTE_USER", "Rétrogradation au rôle USER par un administrateur.");
   }
@@ -237,10 +243,12 @@ public class AppUserServiceImpl implements AppUserService {
 
     List<DiagnosticResult> diagnosticResults =
         diagnosticResultRepository.findByAppUserIdUser(userId);
+
     diagnosticResults.forEach(result -> result.setAppUser(null));
     diagnosticResultRepository.saveAll(diagnosticResults);
 
     List<HistoricEtat> histories = getUserHistories(userId);
+
     histories.forEach(
         history -> {
           history.setAppUser(null);
@@ -249,6 +257,7 @@ public class AppUserServiceImpl implements AppUserService {
           history.setNewValue("[ANONYMIZED_RGPD]");
           history.setComment("Historique anonymisé suite à une demande RGPD.");
         });
+
     historicEtatRepository.saveAll(histories);
 
     user.setMail(anonymizedValue + "@deleted.local");
