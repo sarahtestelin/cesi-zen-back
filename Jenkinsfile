@@ -14,6 +14,26 @@ pipeline {
                 sh './mvnw clean verify'
             }
         }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withCredentials([
+                    string(
+                        credentialsId: 'sonar-token',
+                        variable: 'SONAR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
+                            -Dsonar.projectKey=cesizen-back \
+                            -Dsonar.projectName="CESIZen Back" \
+                            -Dsonar.host.url=http://sonarqube:9000 \
+                            -Dsonar.token="$SONAR_TOKEN" \
+                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                    '''
+                }
+            }
+        }
     }
 
     post {
