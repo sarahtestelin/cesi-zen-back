@@ -7,7 +7,7 @@ RUN mvn -DskipTests package
 
 
 # Étape 2 : exécution
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
