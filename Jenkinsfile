@@ -29,7 +29,8 @@ pipeline {
                             -Dsonar.projectName="CESIZen Back" \
                             -Dsonar.host.url=http://sonarqube:9000 \
                             -Dsonar.token="$SONAR_TOKEN" \
-                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+                            -Dsonar.qualitygate.wait=true
                     '''
                 }
             }
