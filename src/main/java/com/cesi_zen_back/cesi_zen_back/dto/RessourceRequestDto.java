@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record RessourceRequestDto(
-        @NotBlank @Size(max = 150) String title,
-        @NotBlank String description,
-        @NotBlank @Size(max = 100) String category
-) {}
+    @NotBlank @Size(max = 150) String title,
+    @NotBlank String description,
+    @NotBlank @Size(max = 100) String category) {}

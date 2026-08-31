@@ -1,9 +1,8 @@
 package com.cesi_zen_back.cesi_zen_back.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "role")
@@ -14,11 +13,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Role {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "role_id")
-    private UUID roleId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "role_id")
+  private UUID roleId;
 
-    @Column(name = "role_name", nullable = false, unique = true, length = 50)
-    private String roleName;
+  @Column(name = "role_name", nullable = false, unique = true, length = 50)
+  private String roleName;
 }

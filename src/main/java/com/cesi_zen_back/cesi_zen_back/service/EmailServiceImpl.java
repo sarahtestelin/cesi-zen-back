@@ -11,18 +11,19 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender javaMailSender;
+  private final JavaMailSender javaMailSender;
 
-    @Override
-    public void sendResetPasswordEmail(String to, String pseudo, String resetLink) {
-        try {
-            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+  @Override
+  public void sendResetPasswordEmail(String to, String pseudo, String resetLink) {
+    try {
+      MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
-            helper.setFrom("no-reply@cesizen.local");
-            helper.setTo(to);
-            helper.setSubject("Réinitialisation de votre mot de passe CESIZen");
-            helper.setText("""
+      helper.setFrom("no-reply@cesizen.local");
+      helper.setTo(to);
+      helper.setSubject("Réinitialisation de votre mot de passe CESIZen");
+      helper.setText(
+          """
                     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
                         <h2 style="color: #6E4D36;">Bonjour %s,</h2>
                         <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
@@ -42,11 +43,13 @@ public class EmailServiceImpl implements EmailService {
                         <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
                         <p style="color: #aaa; font-size: 0.85em; text-align: center;">CESIZen</p>
                     </div>
-                    """.formatted(pseudo, resetLink), true);
+                    """
+              .formatted(pseudo, resetLink),
+          true);
 
-            javaMailSender.send(mimeMessage);
-        } catch (MessagingException e) {
-            throw new RuntimeException("Erreur lors de l'envoi de l'email", e);
-        }
+      javaMailSender.send(mimeMessage);
+    } catch (MessagingException e) {
+      throw new RuntimeException("Erreur lors de l'envoi de l'email", e);
     }
+  }
 }

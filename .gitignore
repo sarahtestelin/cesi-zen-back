@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Local certificates / private keys
+src/main/resources/certs/*.p12
+src/main/resources/certs/*.jks
+*.pem
+*.key

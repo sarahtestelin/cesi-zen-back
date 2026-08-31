@@ -5,6 +5,4 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record DiagnosticQuestionRequestDto(
-        @NotBlank @Size(max = 255) String question,
-        @Min(0) int score
-) {}
+    @NotBlank @Size(max = 255) String question, @Min(0) int score) {}

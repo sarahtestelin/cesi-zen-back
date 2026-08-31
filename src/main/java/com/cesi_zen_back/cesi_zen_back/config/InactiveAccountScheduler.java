@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class InactiveAccountScheduler {
 
-    private final InactiveAccountService inactiveAccountService;
+  private final InactiveAccountService inactiveAccountService;
 
-    @Scheduled(cron = "0 0 2 * * *")
-    public void disableInactiveAccountsEveryNight() {
-        inactiveAccountService.disableInactiveAccounts();
-    }
+  @Scheduled(cron = "0 0 2 * * *")
+  public void disableInactiveAccountsEveryNight() {
+    inactiveAccountService.disableInactiveAccounts();
+  }
 }
